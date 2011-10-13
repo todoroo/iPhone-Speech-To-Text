@@ -173,37 +173,62 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
     if (self.recording && buttonIndex == 0) {
-        [self stopRecording];
+        [self stopRecording:YES];
     }
 }
 
-- (void)didDismissSineWave {
+- (void)sineWaveDoneAction {
+    if (self.recording)
+        [self stopRecording:YES];
+    else if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)]) {
+        [delegate dismissSineWaveView:sineWave cancelled:NO];
+    }
+}
+
+- (void)cleanUpProcessingThread {
+    @synchronized(self) {
+        [processingThread release];
+        processingThread = nil;
+        processing = NO;
+    }
+}
+
+- (void)sineWaveCancelAction {
     if (self.recording) {
-        [self stopRecording];
-    }
-    if ([delegate respondsToSelector:@selector(dismissSineWaveView:)]) {
-        [delegate dismissSineWaveView:sineWave];
+        [self stopRecording:NO];
+    } else {
+        if (processing) {
+            [processingThread cancel];
+            processing = NO;
+        }
+        if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)]) {
+            [delegate dismissSineWaveView:sineWave cancelled:YES];
+        }
     }
 }
 
-- (void)stopRecording {
+- (void)stopRecording:(BOOL)startProcessing {
     if (self.recording) {
         [status dismissWithClickedButtonIndex:-1 animated:YES];
         [status release];
         status = nil;
         
-        if ([delegate respondsToSelector:@selector(dismissSineWaveView:)])
-            [delegate dismissSineWaveView:sineWave];
+        if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
+            [delegate dismissSineWaveView:sineWave cancelled:!startProcessing];
         
         AudioQueueStop(aqData.mQueue, true);
         aqData.mIsRunning = false;
         [meterTimer invalidate];
         [meterTimer release];
         meterTimer = nil;
-        processing = YES;
-        if ([delegate respondsToSelector:@selector(showLoadingView)])
-            [delegate showLoadingView];
-        [NSThread detachNewThreadSelector:@selector(postByteData:) toTarget:self withObject:aqData.encodedSpeexData];
+        if (startProcessing) {
+            [self cleanUpProcessingThread];
+            processing = YES;
+            processingThread = [[NSThread alloc] initWithTarget:self selector:@selector(postByteData:) object:aqData.encodedSpeexData];
+            [processingThread start];
+            if ([delegate respondsToSelector:@selector(showLoadingView)])
+                [delegate showLoadingView];
+        }
     }
 }
 
@@ -230,7 +255,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
         if (meterStateDB.mAveragePower < kSilenceThresholdDB) {
             samplesBelowSilence++;
             if (samplesBelowSilence > kSilenceThresholdNumSamples)
-                [self stopRecording];
+                [self stopRecording:YES];
         } else {
             samplesBelowSilence = 0;
         }
@@ -247,17 +272,23 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
     [request setTimeoutInterval:15];
     NSURLResponse *response;
     NSError *error = nil;
-    
+    if ([processingThread isCancelled]) {
+        NSLog(@"Caught cancel");
+        [self cleanUpProcessingThread];
+        [request release];
+        return;
+    }
     NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
     [request release];
-    
+    if ([processingThread isCancelled]) {
+        [self cleanUpProcessingThread];
+        return;
+    }
     [self performSelectorOnMainThread:@selector(gotResponse:) withObject:data waitUntilDone:NO];
 }
 
 - (void)gotResponse:(NSData *)jsonData {
-    processing = NO;
-    if ([delegate respondsToSelector:@selector(dismissLoadingView)])
-        [delegate dismissLoadingView];
+    [self cleanUpProcessingThread];
     [delegate didReceiveVoiceResponse:jsonData];
 }
 

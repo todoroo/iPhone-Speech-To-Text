@@ -9,6 +9,12 @@
 #import "SineWaveViewController.h"
 #import "SpeechToTextModule.h"
 
+@interface SineWaveViewController ()
+
+@property (retain) NSString *originalDoneText;
+
+@end
+
 @implementation SineWaveViewController
 
 @synthesize delegate;
@@ -18,11 +24,12 @@
 @synthesize doneButton;
 @synthesize processingView;
 @synthesize header;
+@synthesize originalDoneText;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        //
+        cancelMode = NO;
     }
     return self;
 }
@@ -45,19 +52,36 @@
     [waveDisplay release];
     [doneButton release];
     [processingView release];
+    self.originalDoneText = nil;
     
     [super dealloc];
 }
 
 - (void)resetViewState {
+    NSLog(@"Resetting cancel mode");
     self.header.hidden = NO;
+    self.header.text = @"Speak now";
+    self.header.font = [UIFont fontWithName:@"Helvetica-Bold" size:17.0];
     self.processingView.hidden = YES;
     self.waveDisplay.hidden = NO;
     self.doneButton.hidden = NO;
+    [self.doneButton setTitle:self.originalDoneText forState:UIControlStateNormal];
+    cancelMode = NO;
 }
 
 - (IBAction)done {
-    [delegate didDismissSineWave];
+    if (cancelMode)
+        [delegate sineWaveCancelAction];
+    else
+        [delegate sineWaveDoneAction];
+}
+
+- (void)repurposeForCancelling {
+    if (!cancelMode) {
+        cancelMode = YES;
+        self.originalDoneText = [[self.doneButton titleForState:UIControlStateNormal] retain];
+        [self.doneButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    }
 }
 
 - (void)updateWaveDisplay {

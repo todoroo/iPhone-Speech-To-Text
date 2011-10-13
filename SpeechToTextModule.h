@@ -38,14 +38,13 @@ typedef struct AQRecorderState {
 
 @protocol SpeechToTextModuleDelegate <NSObject>
 
-// Delegate will need to parse JSON
+// Delegate will need to parse JSON and dismiss loading view
 - (void)didReceiveVoiceResponse:(NSData *)data;
 
 @optional
 - (void)showLoadingView;
-- (void)dismissLoadingView;
 - (void)showSineWaveView:(SineWaveViewController *)view;
-- (void)dismissSineWaveView:(SineWaveViewController *)view;
+- (void)dismissSineWaveView:(SineWaveViewController *)view cancelled:(BOOL)wasCancelled;
 
 @end
 
@@ -62,6 +61,8 @@ typedef struct AQRecorderState {
     
     NSMutableArray *volumeDataPoints;
     SineWaveViewController *sineWave;
+    
+    NSThread *processingThread;
 }
 
 @property (readonly) BOOL recording;
@@ -70,6 +71,6 @@ typedef struct AQRecorderState {
 - (id)initWithCustomDisplay:(NSString *)nibName;
 
 - (void)beginRecording;
-- (void)stopRecording;
+- (void)stopRecording:(BOOL)startProcessing;
 
 @end

@@ -11,18 +11,21 @@
 
 @protocol SineWaveViewDelegate <NSObject>
 
-- (void)didDismissSineWave;
+- (void)sineWaveDoneAction;
+- (void)sineWaveCancelAction;
 
 @end
 
 // Users of this class can create
 
 @interface SineWaveViewController : UIViewController {
-    IBOutlet UILabel *header;
+    IBOutlet UITextView *header;
     IBOutlet UIImageView *backgroundImage;
     IBOutlet WaveDisplay *waveDisplay;
     IBOutlet UIView *processingView;
     IBOutlet UIButton *doneButton;
+    
+    BOOL cancelMode;
 }
 
 @property (assign) id<SineWaveViewDelegate> delegate;
@@ -30,12 +33,12 @@
 @property (readonly) UIImageView *backgroundView;
 @property (readonly) UIView *processingView;
 @property (readonly) UIButton *doneButton;
-@property (readonly) UILabel *header;
+@property (readonly) UITextView *header;
 
 @property (nonatomic, retain) NSArray *dataPoints;
 - (IBAction)done;
 - (void)updateWaveDisplay;
-
 - (void)resetViewState;
+- (void)repurposeForCancelling;
 
 @end
