@@ -18,18 +18,24 @@
 // Users of this class can create
 
 @interface SineWaveViewController : UIViewController {
+    IBOutlet UILabel *header;
     IBOutlet UIImageView *backgroundImage;
     IBOutlet WaveDisplay *waveDisplay;
+    IBOutlet UIView *processingView;
     IBOutlet UIButton *doneButton;
 }
 
 @property (assign) id<SineWaveViewDelegate> delegate;
 @property (readonly) WaveDisplay *waveDisplay;
 @property (readonly) UIImageView *backgroundView;
+@property (readonly) UIView *processingView;
 @property (readonly) UIButton *doneButton;
+@property (readonly) UILabel *header;
 
 @property (nonatomic, retain) NSArray *dataPoints;
 - (IBAction)done;
 - (void)updateWaveDisplay;
+
+- (void)resetViewState;
 
 @end

@@ -16,6 +16,8 @@
 @synthesize backgroundView;
 @synthesize waveDisplay;
 @synthesize doneButton;
+@synthesize processingView;
+@synthesize header;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
@@ -37,11 +39,21 @@
 }
 
 - (void)dealloc {
+    [dataPoints release];
+    [header release];
     [backgroundImage release];
     [waveDisplay release];
     [doneButton release];
+    [processingView release];
     
     [super dealloc];
+}
+
+- (void)resetViewState {
+    self.header.hidden = NO;
+    self.processingView.hidden = YES;
+    self.waveDisplay.hidden = NO;
+    self.doneButton.hidden = NO;
 }
 
 - (IBAction)done {
