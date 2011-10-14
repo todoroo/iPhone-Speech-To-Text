@@ -24,6 +24,7 @@
 @synthesize doneButton;
 @synthesize processingView;
 @synthesize header;
+@synthesize footer;
 @synthesize originalDoneText;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -48,6 +49,7 @@
 - (void)dealloc {
     [dataPoints release];
     [header release];
+    [footer release];
     [backgroundImage release];
     [waveDisplay release];
     [doneButton release];
@@ -58,13 +60,13 @@
 }
 
 - (void)resetViewState {
-    NSLog(@"Resetting cancel mode");
     self.header.hidden = NO;
     self.header.text = @"Speak now";
     self.header.font = [UIFont fontWithName:@"Helvetica-Bold" size:17.0];
     self.processingView.hidden = YES;
     self.waveDisplay.hidden = NO;
     self.doneButton.hidden = NO;
+    self.footer.hidden = YES;
     [self.doneButton setTitle:self.originalDoneText forState:UIControlStateNormal];
     cancelMode = NO;
 }

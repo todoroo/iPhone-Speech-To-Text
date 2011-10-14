@@ -19,11 +19,12 @@
 // Users of this class can create
 
 @interface SineWaveViewController : UIViewController {
-    IBOutlet UITextView *header;
+    IBOutlet UILabel *header;
     IBOutlet UIImageView *backgroundImage;
     IBOutlet WaveDisplay *waveDisplay;
     IBOutlet UIView *processingView;
     IBOutlet UIButton *doneButton;
+    IBOutlet UITextView *footer;
     
     BOOL cancelMode;
 }
@@ -33,7 +34,8 @@
 @property (readonly) UIImageView *backgroundView;
 @property (readonly) UIView *processingView;
 @property (readonly) UIButton *doneButton;
-@property (readonly) UITextView *header;
+@property (readonly) UILabel *header;
+@property (readonly) UITextView *footer;
 
 @property (nonatomic, retain) NSArray *dataPoints;
 - (IBAction)done;
