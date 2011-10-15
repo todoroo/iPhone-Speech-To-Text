@@ -148,7 +148,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
     detectedSpeech = NO;
     
     [volumeDataPoints release];
-    volumeDataPoints = [[NSMutableArray alloc] initWithCapacity:10];
+    volumeDataPoints = [[NSMutableArray alloc] initWithCapacity:kNumVolumeSamples];
     for (int i = 0; i < kNumVolumeSamples; i++) {
         [volumeDataPoints addObject:[NSNumber numberWithFloat:kMinVolumeSampleValue]];
     }
@@ -167,7 +167,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
             status = [[UIAlertView alloc] initWithTitle:@"Speak now!" message:@"" delegate:self cancelButtonTitle:@"Done" otherButtonTitles:nil];
             [status show];
         }
-        meterTimer = [[NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(checkMeter) userInfo:nil repeats:YES] retain];
+        meterTimer = [[NSTimer scheduledTimerWithTimeInterval:kVolumeSamplingInterval target:self selector:@selector(checkMeter) userInfo:nil repeats:YES] retain];
     }
 }
 

@@ -15,7 +15,10 @@
 #define kNumberBuffers 3
 #define kNumVolumeSamples 10
 #define kSilenceThresholdDB -30.0
-#define kSilenceThresholdNumSamples 18
+
+#define kVolumeSamplingInterval 0.05
+#define kSilenceTimeThreshold 0.9
+#define kSilenceThresholdNumSamples kSilenceTimeThreshold / kVolumeSamplingInterval
 
 // For scaling display
 #define kMinVolumeSampleValue 0.01
