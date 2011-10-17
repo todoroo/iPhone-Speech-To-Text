@@ -110,7 +110,9 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 }
 
 - (void)dealloc {
+    status.delegate = nil;
     [status release];
+    sineWave.delegate = nil;
     [sineWave release];
     speex_bits_destroy(&(aqData.speex_bits));
     speex_encoder_destroy(aqData.speex_enc_state);
@@ -156,18 +158,20 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 }
 
 - (void)beginRecording {
-    if (!self.recording && !processing) {
-        aqData.mCurrentPacket = 0;
-        aqData.mIsRunning = true;
-        [self reset];
-        AudioQueueStart(aqData.mQueue, NULL);
-        if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
-            [delegate showSineWaveView:sineWave];
-        } else {
-            status = [[UIAlertView alloc] initWithTitle:@"Speak now!" message:@"" delegate:self cancelButtonTitle:@"Done" otherButtonTitles:nil];
-            [status show];
+    @synchronized(self) {
+        if (!self.recording && !processing) {
+            aqData.mCurrentPacket = 0;
+            aqData.mIsRunning = true;
+            [self reset];
+            AudioQueueStart(aqData.mQueue, NULL);
+            if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
+                [delegate showSineWaveView:sineWave];
+            } else {
+                status = [[UIAlertView alloc] initWithTitle:@"Speak now!" message:@"" delegate:self cancelButtonTitle:@"Done" otherButtonTitles:nil];
+                [status show];
+            }
+            meterTimer = [[NSTimer scheduledTimerWithTimeInterval:kVolumeSamplingInterval target:self selector:@selector(checkMeter) userInfo:nil repeats:YES] retain];
         }
-        meterTimer = [[NSTimer scheduledTimerWithTimeInterval:kVolumeSamplingInterval target:self selector:@selector(checkMeter) userInfo:nil repeats:YES] retain];
     }
 }
 
@@ -208,26 +212,28 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 }
 
 - (void)stopRecording:(BOOL)startProcessing {
-    if (self.recording) {
-        [status dismissWithClickedButtonIndex:-1 animated:YES];
-        [status release];
-        status = nil;
-        
-        if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
-            [delegate dismissSineWaveView:sineWave cancelled:!startProcessing];
-        
-        AudioQueueStop(aqData.mQueue, true);
-        aqData.mIsRunning = false;
-        [meterTimer invalidate];
-        [meterTimer release];
-        meterTimer = nil;
-        if (startProcessing) {
-            [self cleanUpProcessingThread];
-            processing = YES;
-            processingThread = [[NSThread alloc] initWithTarget:self selector:@selector(postByteData:) object:aqData.encodedSpeexData];
-            [processingThread start];
-            if ([delegate respondsToSelector:@selector(showLoadingView)])
-                [delegate showLoadingView];
+    @synchronized(self) {
+        if (self.recording) {
+            [status dismissWithClickedButtonIndex:-1 animated:YES];
+            [status release];
+            status = nil;
+            
+            if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
+                [delegate dismissSineWaveView:sineWave cancelled:!startProcessing];
+            
+            AudioQueueStop(aqData.mQueue, true);
+            aqData.mIsRunning = false;
+            [meterTimer invalidate];
+            [meterTimer release];
+            meterTimer = nil;
+            if (startProcessing) {
+                [self cleanUpProcessingThread];
+                processing = YES;
+                processingThread = [[NSThread alloc] initWithTarget:self selector:@selector(postByteData:) object:aqData.encodedSpeexData];
+                [processingThread start];
+                if ([delegate respondsToSelector:@selector(showLoadingView)])
+                    [delegate showLoadingView];
+            }
         }
     }
 }

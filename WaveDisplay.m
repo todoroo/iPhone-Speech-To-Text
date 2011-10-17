@@ -26,8 +26,10 @@
     self.dataPoints = nil;
 }
 
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
+// Simulates drawing a waveform by drawing a series of alternating 
+// quadratic curves of varying heights. Also reverses the sign of
+// each data point at every iteration to achieve the effect of
+// waveform movement
 - (void)drawRect:(CGRect)rect {
     [super drawRect:rect];
     static bool reverse = false;

@@ -41,6 +41,7 @@
 }
 
 - (void)setDataPoints:(NSArray *)_dataPoints {
+    // Have to hold on to them here in case the wave display hasn't loaded when they're first set
     [dataPoints release];
     dataPoints = [_dataPoints retain];
     waveDisplay.dataPoints = dataPoints;
