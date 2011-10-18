@@ -42,7 +42,8 @@ typedef struct AQRecorderState {
 @protocol SpeechToTextModuleDelegate <NSObject>
 
 // Delegate will need to parse JSON and dismiss loading view if presented
-- (void)didReceiveVoiceResponse:(NSData *)data;
+// returns true on success, false on failure
+- (BOOL)didReceiveVoiceResponse:(NSData *)data;
 
 @optional
 - (void)showSineWaveView:(SineWaveViewController *)view;
