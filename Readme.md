@@ -6,13 +6,17 @@ Speex codec and three supporting classes to make speech-to-text on iOS as simple
 There are a few steps required to configure the project in Xcode:
 
 1) Clone the project
+
 2) Add the SpeechToText Xcode project to your project
+
 3) In your project's settings, update the target's build phases by adding SpeechToText
    to the "Target Dependencies" section and libSpeechToText.a under the "Link Binary with Libraries"
    section.
+
 4) Under the target's Build Settings tab, add the iPhone-Speech-to-Text directory (i.e. the path
    on your hard drive to wherever it exists) to the "Header Search Paths" field, and click the box
    marked "Recursive"
+
 5) Import "SpeechToTextModule.h" wherever you want to use it!
 
 The SpeechToTextModule class is the core of the library, but is very simple. An instance of this
