@@ -49,6 +49,7 @@
 }
 
 - (void)dealloc {
+    delegate = nil;
     [dataPoints release];
     [header release];
     [footer release];

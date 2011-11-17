@@ -15,7 +15,7 @@
 
 - (void)reset;
 - (void)postByteData:(NSData *)data;
-
+- (void)cleanUpProcessingThread;
 @end
 
 @implementation SpeechToTextModule
@@ -110,6 +110,12 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 }
 
 - (void)dealloc {
+    [processingThread cancel];
+    if (processing) {
+        [self cleanUpProcessingThread];
+    }
+    
+    
     status.delegate = nil;
     [status release];
     sineWave.delegate = nil;
@@ -279,7 +285,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
     NSURLResponse *response;
     NSError *error = nil;
     if ([processingThread isCancelled]) {
-        NSLog(@"Caught cancel");
+        //NSLog(@"Caught cancel");
         [self cleanUpProcessingThread];
         [request release];
         return;

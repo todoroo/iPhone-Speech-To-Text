@@ -897,6 +897,11 @@
 		22283602143E9EBE000D6E05 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=*]" = (
+					armv6,
+					armv7,
+				);
 				DSTROOT = /tmp/speex.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "speex/SpeechToText-Prefix.pch";
@@ -912,6 +917,11 @@
 		22283603143E9EBE000D6E05 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				"ARCHS[sdk=*]" = (
+					armv6,
+					armv7,
+				);
 				DSTROOT = /tmp/speex.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "speex/SpeechToText-Prefix.pch";
