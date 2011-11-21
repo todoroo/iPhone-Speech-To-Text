@@ -31,9 +31,8 @@
     IBOutlet UIView *processingView;
     
     IBOutlet UIButton *doneButton;
+    IBOutlet UIButton *cancelButton;
     IBOutlet UITextView *footer;
-    
-    BOOL cancelMode;
 }
 
 @property (assign) id<SineWaveViewDelegate> delegate;
@@ -41,6 +40,7 @@
 @property (readonly) UIImageView *backgroundView;
 @property (readonly) UIView *processingView;
 @property (readonly) UIButton *doneButton;
+@property (readonly) UIButton *cancelButton;
 @property (readonly) UILabel *header;
 @property (readonly) UITextView *footer;
 
@@ -51,6 +51,8 @@
 // which is generally a SpeechToTextModule instance
 - (IBAction)done;
 
+- (IBAction)cancel;
+
 // Force the waveform display to update when new data is added
 - (void)updateWaveDisplay;
 
@@ -58,6 +60,6 @@
 - (void)resetViewState;
 
 // Repurposes the done button to be a cancel button
-- (void)repurposeForCancelling;
+//- (void)repurposeForCancelling;
 
 @end

@@ -26,11 +26,12 @@
 @synthesize header;
 @synthesize footer;
 @synthesize originalDoneText;
+@synthesize cancelButton;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        cancelMode = NO;
+
     }
     return self;
 }
@@ -54,6 +55,7 @@
     [backgroundImage release];
     [waveDisplay release];
     [doneButton release];
+    [cancelButton release];
     [processingView release];
     self.originalDoneText = nil;
     
@@ -67,24 +69,17 @@
     self.processingView.hidden = YES;
     self.waveDisplay.hidden = NO;
     self.doneButton.hidden = NO;
+    self.doneButton.enabled = YES;
+    self.cancelButton.hidden = NO;
     self.footer.hidden = YES;
-    [self.doneButton setTitle:self.originalDoneText forState:UIControlStateNormal];
-    cancelMode = NO;
 }
 
 - (IBAction)done {
-    if (cancelMode)
-        [delegate sineWaveCancelAction];
-    else
-        [delegate sineWaveDoneAction];
+    [delegate sineWaveDoneAction];
 }
 
-- (void)repurposeForCancelling {
-    if (!cancelMode) {
-        cancelMode = YES;
-        self.originalDoneText = [[self.doneButton titleForState:UIControlStateNormal] retain];
-        [self.doneButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    }
+-(IBAction)cancel {
+    [delegate sineWaveCancelAction];
 }
 
 - (void)updateWaveDisplay {
