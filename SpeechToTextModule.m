@@ -115,7 +115,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
         [self cleanUpProcessingThread];
     }
     
-    
+    self.delegate = nil;
     status.delegate = nil;
     [status release];
     sineWave.delegate = nil;
