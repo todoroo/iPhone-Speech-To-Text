@@ -34,9 +34,9 @@ typedef struct AQRecorderState {
     SpeexBits                    speex_bits; 
     void *                       speex_enc_state;
     int                          speex_samples_per_frame;
-    NSMutableData *              encodedSpeexData;
+    __unsafe_unretained NSMutableData *              encodedSpeexData;
     
-    id selfRef;
+    __unsafe_unretained id selfRef;
 } AQRecorderState;
 
 @protocol SpeechToTextModuleDelegate <NSObject>

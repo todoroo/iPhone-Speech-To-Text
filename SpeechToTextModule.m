@@ -275,6 +275,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 }
 
 - (void)postByteData:(NSData *)byteData {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     NSURL *url = [NSURL URLWithString:@"https://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=en-US"];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
     [request setHTTPMethod:@"POST"];
@@ -288,15 +289,19 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
         //NSLog(@"Caught cancel");
         [self cleanUpProcessingThread];
         [request release];
+        [pool drain];
         return;
     }
     NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
     [request release];
     if ([processingThread isCancelled]) {
         [self cleanUpProcessingThread];
+        [pool drain];
         return;
     }
+    
     [self performSelectorOnMainThread:@selector(gotResponse:) withObject:data waitUntilDone:NO];
+    [pool drain];
 }
 
 - (void)gotResponse:(NSData *)jsonData {
