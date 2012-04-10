@@ -25,6 +25,7 @@ typedef struct AQPlayerState {
 @interface AudioPlayer : NSObject {
     AQPlayerState aqData;
 }
+-(void) startQueue;
 -(void) setUpNewQueue;
 -(void) beginPlayback: (NSString*) fileName;
 @end

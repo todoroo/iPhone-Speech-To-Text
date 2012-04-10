@@ -305,7 +305,7 @@ OSStatus SetMagicCookieForFile (
         }
     }
     
-    
+    /*
 #warning REMOVE
     CFStringRef recordFilePath = (CFStringRef)[NSTemporaryDirectory() stringByAppendingPathComponent: @"newfile.caf"];
     
@@ -316,7 +316,7 @@ OSStatus SetMagicCookieForFile (
     OSStatus result = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
     NSLog(@"Closed recording");
     NSLog(@"OSStatus: %ld", result);
-    
+    */
 }
 
 - (void)checkMeter {

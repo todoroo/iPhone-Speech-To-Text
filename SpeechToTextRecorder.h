@@ -1,3 +1,5 @@
+
+
 //
 //  VoiceAddModule.h
 //  AstridiPhone
@@ -10,7 +12,6 @@
 #import <UIKit/UIKit.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <speex/speex.h>
-#import "SineWaveViewController.h"
 
 #define kNumberBuffers 3
 #define kNumVolumeSamples 10
@@ -45,20 +46,8 @@ typedef struct AQRecorderState {
     __unsafe_unretained id selfRef;
 } AQRecorderState;
 
-@protocol SpeechToTextRecorderDelegate <NSObject>
 
-// Delegate will need to parse JSON and dismiss loading view if presented
-// returns true on success, false on failure
-- (BOOL)didReceiveVoiceResponse:(NSData *)data;
-
-@optional
-- (void)showSineWaveView:(SineWaveViewController *)view;
-- (void)dismissSineWaveView:(SineWaveViewController *)view cancelled:(BOOL)wasCancelled;
-- (void)showLoadingView;
-
-@end
-
-@interface SpeechToTextRecorder : NSObject <UIAlertViewDelegate, SineWaveViewDelegate> {
+@interface SpeechToTextRecorder : NSObject <UIAlertViewDelegate> {
     UIAlertView *status;
     
     AQRecorderState aqData;
@@ -66,23 +55,14 @@ typedef struct AQRecorderState {
     BOOL detectedSpeech;
     int samplesBelowSilence;
     
-    NSTimer *meterTimer;
-    BOOL processing;
-    
-    NSMutableArray *volumeDataPoints;
-    SineWaveViewController *sineWave;
-    
-    NSThread *processingThread;
 }
 
 @property (readonly) BOOL recording;
-@property (assign) id<SpeechToTextRecorderDelegate> delegate;
 
 /* Caller can pass a non-nil nib name to specify the nib with which to create
  a SineWaveViewController (nib should conform to the spec in the SineWaveViewController
  interface). A nil argument will cause the module to display an alert view instead
  of the custom view controller. */
-- (id)initWithCustomDisplay:(NSString *)nibName;
 
 // Begins a voice recording
 - (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName;
