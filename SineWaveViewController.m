@@ -65,7 +65,7 @@
 
 - (void)resetViewState {
     self.header.hidden = NO;
-    self.header.text = @"Speak now";
+    self.header.text = NSLocalizedString(@"Speak now", nil);
     self.header.font = [UIFont fontWithName:@"Helvetica-Bold" size:17.0];
     self.processingView.hidden = YES;
     self.waveDisplay.hidden = NO;

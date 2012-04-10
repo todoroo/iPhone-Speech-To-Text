@@ -24,6 +24,7 @@
 
 - (void)dealloc {
     self.dataPoints = nil;
+    [super dealloc];
 }
 
 // Simulates drawing a waveform by drawing a series of alternating 

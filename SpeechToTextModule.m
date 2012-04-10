@@ -173,7 +173,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
             if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
                 [delegate showSineWaveView:sineWave];
             } else {
-                status = [[UIAlertView alloc] initWithTitle:@"Speak now!" message:@"" delegate:self cancelButtonTitle:@"Done" otherButtonTitles:nil];
+                status = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Speak now!", nil) message:@"" delegate:self cancelButtonTitle:NSLocalizedString(@"Done", nil) otherButtonTitles:nil];
                 [status show];
             }
             meterTimer = [[NSTimer scheduledTimerWithTimeInterval:kVolumeSamplingInterval target:self selector:@selector(checkMeter) userInfo:nil repeats:YES] retain];
@@ -286,7 +286,6 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
     NSURLResponse *response;
     NSError *error = nil;
     if ([processingThread isCancelled]) {
-        //NSLog(@"Caught cancel");
         [self cleanUpProcessingThread];
         [request release];
         [pool drain];
