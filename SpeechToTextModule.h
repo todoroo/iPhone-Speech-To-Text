@@ -31,6 +31,12 @@ typedef struct AQRecorderState {
     SInt64                       mCurrentPacket;                
     bool                         mIsRunning;
     
+    bool                         transcribeAudio;
+    
+    // Recording
+    AudioFileID                  mAudioFile;
+    
+    // Speex
     SpeexBits                    speex_bits; 
     void *                       speex_enc_state;
     int                          speex_samples_per_frame;
@@ -79,7 +85,7 @@ typedef struct AQRecorderState {
 - (id)initWithCustomDisplay:(NSString *)nibName;
 
 // Begins a voice recording
-- (void)beginRecording;
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName;
 
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.

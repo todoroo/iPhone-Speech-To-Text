@@ -140,6 +140,8 @@
 		2253CF771443BE19004EF35F /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2253CF761443BE19004EF35F /* AudioToolbox.framework */; };
 		2253D53B1443D470004EF35F /* SpeechToTextModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 2253D5391443D470004EF35F /* SpeechToTextModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2253D53C1443D470004EF35F /* SpeechToTextModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 2253D53A1443D470004EF35F /* SpeechToTextModule.m */; };
+		37D1E3E01533E8E600AA4A17 /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 37D1E3DE1533E8E600AA4A17 /* AudioPlayer.h */; };
+		37D1E3E11533E8E600AA4A17 /* AudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 37D1E3DF1533E8E600AA4A17 /* AudioPlayer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -340,6 +342,8 @@
 		2253CF761443BE19004EF35F /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		2253D5391443D470004EF35F /* SpeechToTextModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpeechToTextModule.h; sourceTree = "<group>"; };
 		2253D53A1443D470004EF35F /* SpeechToTextModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SpeechToTextModule.m; sourceTree = "<group>"; };
+		37D1E3DE1533E8E600AA4A17 /* AudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPlayer.h; sourceTree = "<group>"; };
+		37D1E3DF1533E8E600AA4A17 /* AudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioPlayer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -359,6 +363,8 @@
 		222835E9143E9EBD000D6E05 = {
 			isa = PBXGroup;
 			children = (
+				37D1E3DE1533E8E600AA4A17 /* AudioPlayer.h */,
+				37D1E3DF1533E8E600AA4A17 /* AudioPlayer.m */,
 				2253D5391443D470004EF35F /* SpeechToTextModule.h */,
 				2253D53A1443D470004EF35F /* SpeechToTextModule.m */,
 				224861281444AB0C00796103 /* SineWaveViewController.h */,
@@ -721,6 +727,7 @@
 				2228374E143EA26C000D6E05 /* ogg.h in Headers */,
 				2228374F143EA26C000D6E05 /* os_types.h in Headers */,
 				224861BF1444D21D00796103 /* WaveDisplay.h in Headers */,
+				37D1E3E01533E8E600AA4A17 /* AudioPlayer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -838,6 +845,7 @@
 				2253D53C1443D470004EF35F /* SpeechToTextModule.m in Sources */,
 				2248612B1444AB0C00796103 /* SineWaveViewController.m in Sources */,
 				224861C01444D21D00796103 /* WaveDisplay.m in Sources */,
+				37D1E3E11533E8E600AA4A17 /* AudioPlayer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

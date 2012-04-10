@@ -44,7 +44,18 @@ static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBuffe
     
         [pAqData->encodedSpeexData appendBytes:cbits length:nbBytes + 1];
     }
-    pAqData->mCurrentPacket += inNumPackets;
+    // handle recording
+    if (!pAqData->transcribeAudio || AudioFileWritePackets (
+                               pAqData->mAudioFile,
+                               false,
+                               inBuffer->mAudioDataByteSize,
+                               inPacketDesc,
+                               pAqData->mCurrentPacket,
+                               &inNumPackets,
+                               inBuffer->mAudioData
+                               ) == noErr) {
+        pAqData->mCurrentPacket += inNumPackets;
+    }
     
     if (!pAqData->mIsRunning) 
         return;
@@ -64,6 +75,48 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
     Float64 numBytesForTime = ASBDescription->mSampleRate * maxPacketSize * seconds;
     *outBufferSize = (UInt32)(numBytesForTime < maxBufferSize ? numBytesForTime : maxBufferSize);
 }
+ 
+
+
+
+OSStatus SetMagicCookieForFile (
+                                AudioQueueRef inQueue,                                      // 1
+                                AudioFileID   inFile                                        // 2
+                                ) {
+    OSStatus result = noErr;                                    // 3
+    UInt32 cookieSize;                                          // 4
+    
+    if (
+        AudioQueueGetPropertySize (                         // 5
+                                   inQueue,
+                                   kAudioQueueProperty_MagicCookie,
+                                   &cookieSize
+                                   ) == noErr
+        ) {
+        char* magicCookie =
+        (char *) malloc (cookieSize);                       // 6
+        if (
+            AudioQueueGetProperty (                         // 7
+                                   inQueue,
+                                   kAudioQueueProperty_MagicCookie,
+                                   magicCookie,
+                                   &cookieSize
+                                   ) == noErr
+            )
+            result =    AudioFileSetProperty (                  // 8
+                                              inFile,
+                                              kAudioFilePropertyMagicCookieData,
+                                              cookieSize,
+                                              magicCookie
+                                              );
+        free (magicCookie);                                     // 9
+    }
+    return result;                                              // 10
+}
+
+
+
+
 
 - (id)init {
     if ((self = [self initWithCustomDisplay:nil])) {
@@ -124,6 +177,7 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
     speex_encoder_destroy(aqData.speex_enc_state);
     [aqData.encodedSpeexData release];
     AudioQueueDispose(aqData.mQueue, true);
+    AudioFileClose (aqData.mAudioFile); 
     [volumeDataPoints release];
     
     [super dealloc];
@@ -134,8 +188,10 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 }
 
 - (void)reset {
-    if (aqData.mQueue != NULL)
+    if (aqData.mQueue != NULL) {
         AudioQueueDispose(aqData.mQueue, true);
+        AudioFileClose (aqData.mAudioFile); 
+    }
     UInt32 enableLevelMetering = 1;
     AudioQueueNewInput(&(aqData.mDataFormat), HandleInputBuffer, &aqData, NULL, kCFRunLoopCommonModes, 0, &(aqData.mQueue));
     AudioQueueSetProperty(aqData.mQueue, kAudioQueueProperty_EnableLevelMetering, &enableLevelMetering, sizeof(UInt32));
@@ -163,9 +219,15 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
     sineWave.dataPoints = volumeDataPoints;
 }
 
-- (void)beginRecording {
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName {
     @synchronized(self) {
         if (!self.recording && !processing) {
+            aqData.transcribeAudio = transcribe;
+            NSString *recordFile = [NSTemporaryDirectory() stringByAppendingPathComponent: (NSString*)fileName];	
+			
+            CFURLRef audioFileURL = CFURLCreateWithString(kCFAllocatorDefault, (CFStringRef)recordFile, NULL);
+            AudioFileCreateWithURL (audioFileURL, kAudioFileCAFType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile);
+            
             aqData.mCurrentPacket = 0;
             aqData.mIsRunning = true;
             [self reset];
@@ -242,6 +304,19 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
             }
         }
     }
+    
+    
+#warning REMOVE
+    CFStringRef recordFilePath = (CFStringRef)[NSTemporaryDirectory() stringByAppendingPathComponent: @"newfile.caf"];
+    
+    AudioFileID mAudioFile = nil;
+    CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, recordFilePath, kCFURLPOSIXPathStyle, false);
+    if (!sndFile) { printf("can't parse file path\n"); return; }
+    
+    OSStatus status = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
+    NSLog(@"Closed recording");
+    NSLog(@"OSStatus: %ld", status);
+    
 }
 
 - (void)checkMeter {
