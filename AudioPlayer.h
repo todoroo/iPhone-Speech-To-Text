@@ -9,8 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <AudioToolbox/AudioToolbox.h>
-
-static const int kNumberBuffers = 3;                              // 1
+#import "SpeechToTextModule.h"
 typedef struct AQPlayerState {
     AudioStreamBasicDescription   mDataFormat;                    // 2
     AudioQueueRef                 mQueue;                         // 3

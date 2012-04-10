@@ -87,7 +87,8 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc,             
     
     OSStatus result = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
     
-    CFRelease (mAudioFile);                               // 7
+#warning Release
+//    CFRelease (mAudioFile);                               // 7
     NSLog(@"Closed recording");
     NSLog(@"OSStatus: %ld", result);
     
@@ -100,9 +101,11 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc,             
                           &aqData.mDataFormat                                 // 6
                           );
     [self setUpNewQueue];
-    if (sndFile) {
-        CFRelease(sndFile);
-    }
+    
+#warning release
+//    if (sndFile) {
+//        CFRelease(sndFile);
+//    }
 }
 
 -(void) setUpNewQueue {
