@@ -147,9 +147,6 @@ OSStatus SetMagicCookieForFile (
 }
 
 - (void)dealloc {
-    
-    status.delegate = nil;
-    [status release];
     speex_bits_destroy(&(aqData.speex_bits));
     speex_encoder_destroy(aqData.speex_enc_state);
     [aqData.encodedSpeexData release];
@@ -204,19 +201,17 @@ OSStatus SetMagicCookieForFile (
     }
 }
 
-- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
-    if (self.recording && buttonIndex == 0) {
-        [self stopRecording:YES];
-    }
+- (NSData*)encodedSpeexData {
+    return aqData.encodedSpeexData;
 }
 
+- (AudioQueueRef) mQueue {
+    return aqData.mQueue;
+}
 
-- (void)stopRecording:(BOOL)startProcessing {
+- (void)stopRecording {
     @synchronized(self) {
         if (self.recording) {
-            [status dismissWithClickedButtonIndex:-1 animated:YES];
-            [status release];
-            status = nil;
             
             AudioQueueStop(aqData.mQueue, true);
             aqData.mIsRunning = false;

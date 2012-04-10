@@ -11,39 +11,8 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <speex/speex.h>
 #import "SineWaveViewController.h"
+#import "SpeechToTextRecorder.h"
 
-#define kNumberBuffers 3
-#define kNumVolumeSamples 10
-#define kSilenceThresholdDB -30.0
-
-#define kVolumeSamplingInterval 0.05
-#define kSilenceTimeThreshold 0.9
-#define kSilenceThresholdNumSamples kSilenceTimeThreshold / kVolumeSamplingInterval
-
-// For scaling display
-#define kMinVolumeSampleValue 0.01
-#define kMaxVolumeSampleValue 1.0
-typedef struct AQRecorderState {
-    AudioStreamBasicDescription  mDataFormat;                   
-    AudioQueueRef                mQueue;                        
-    AudioQueueBufferRef          mBuffers[kNumberBuffers];                    
-    UInt32                       bufferByteSize;                
-    SInt64                       mCurrentPacket;                
-    bool                         mIsRunning;
-    
-    bool                         transcribeAudio;
-    
-    // Recording
-    AudioFileID                  mAudioFile;
-    
-    // Speex
-    SpeexBits                    speex_bits; 
-    void *                       speex_enc_state;
-    int                          speex_samples_per_frame;
-    __unsafe_unretained NSMutableData *              encodedSpeexData;
-    
-    __unsafe_unretained id selfRef;
-} AQRecorderState;
 
 @protocol SpeechToTextModuleDelegate <NSObject>
 
@@ -61,7 +30,7 @@ typedef struct AQRecorderState {
 @interface SpeechToTextModule : NSObject <UIAlertViewDelegate, SineWaveViewDelegate> {
     UIAlertView *status;
     
-    AQRecorderState aqData;
+    SpeechToTextRecorder *speechRecorder;
     
     BOOL detectedSpeech;
     int samplesBelowSilence;

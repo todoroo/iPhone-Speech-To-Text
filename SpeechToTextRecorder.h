@@ -48,7 +48,6 @@ typedef struct AQRecorderState {
 
 
 @interface SpeechToTextRecorder : NSObject <UIAlertViewDelegate> {
-    UIAlertView *status;
     
     AQRecorderState aqData;
     
@@ -63,12 +62,16 @@ typedef struct AQRecorderState {
  a SineWaveViewController (nib should conform to the spec in the SineWaveViewController
  interface). A nil argument will cause the module to display an alert view instead
  of the custom view controller. */
-
+- (void) stopRecording;
+- (void) reset;
+- (NSData *) encodedSpeexData;
+- (AudioQueueRef) mQueue;
 // Begins a voice recording
 - (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName;
 
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.
 - (void)stopRecording:(BOOL)startProcessing;
+
 
 @end

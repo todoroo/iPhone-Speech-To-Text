@@ -9,8 +9,6 @@
 #import "SpeechToTextModule.h"
 #import "SineWaveViewController.h"
 
-#define FRAME_SIZE 110
-
 @interface SpeechToTextModule ()
 
 - (void)reset;
@@ -22,102 +20,6 @@
 
 @synthesize delegate;
 
-static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer, 
-                               const AudioTimeStamp *inStartTime, UInt32 inNumPackets, 
-                               const AudioStreamPacketDescription *inPacketDesc) {
-    
-    AQRecorderState *pAqData = (AQRecorderState *) aqData;               
-    
-    if (inNumPackets == 0 && pAqData->mDataFormat.mBytesPerPacket != 0)
-        inNumPackets = inBuffer->mAudioDataByteSize / pAqData->mDataFormat.mBytesPerPacket;
-    
-    // process speex
-    int packets_per_frame = pAqData->speex_samples_per_frame;
-    
-    char cbits[FRAME_SIZE + 1];
-    for (int i = 0; i < inNumPackets; i+= packets_per_frame) {
-        speex_bits_reset(&(pAqData->speex_bits));
-        
-        speex_encode_int(pAqData->speex_enc_state, ((spx_int16_t*)inBuffer->mAudioData) + i, &(pAqData->speex_bits));
-        int nbBytes = speex_bits_write(&(pAqData->speex_bits), cbits + 1, FRAME_SIZE);
-        cbits[0] = nbBytes;
-    
-        [pAqData->encodedSpeexData appendBytes:cbits length:nbBytes + 1];
-    }
-    // handle recording
-    if (!pAqData->transcribeAudio || AudioFileWritePackets (
-                               pAqData->mAudioFile,
-                               false,
-                               inBuffer->mAudioDataByteSize,
-                               inPacketDesc,
-                               pAqData->mCurrentPacket,
-                               &inNumPackets,
-                               inBuffer->mAudioData
-                               ) == noErr) {
-        pAqData->mCurrentPacket += inNumPackets;
-    }
-    
-    if (!pAqData->mIsRunning) 
-        return;
-    
-    AudioQueueEnqueueBuffer(pAqData->mQueue, inBuffer, 0, NULL);
-}
-
-static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescription *ASBDescription, Float64 seconds, UInt32 *outBufferSize) {
-    static const int maxBufferSize = 0x50000;
-    
-    int maxPacketSize = ASBDescription->mBytesPerPacket;
-    if (maxPacketSize == 0) {
-        UInt32 maxVBRPacketSize = sizeof(maxPacketSize);
-        AudioQueueGetProperty (audioQueue, kAudioQueueProperty_MaximumOutputPacketSize, &maxPacketSize, &maxVBRPacketSize);
-    }
-    
-    Float64 numBytesForTime = ASBDescription->mSampleRate * maxPacketSize * seconds;
-    *outBufferSize = (UInt32)(numBytesForTime < maxBufferSize ? numBytesForTime : maxBufferSize);
-}
- 
-
-
-
-OSStatus SetMagicCookieForFile (
-                                AudioQueueRef inQueue,                                      // 1
-                                AudioFileID   inFile                                        // 2
-                                ) {
-    OSStatus result = noErr;                                    // 3
-    UInt32 cookieSize;                                          // 4
-    
-    if (
-        AudioQueueGetPropertySize (                         // 5
-                                   inQueue,
-                                   kAudioQueueProperty_MagicCookie,
-                                   &cookieSize
-                                   ) == noErr
-        ) {
-        char* magicCookie =
-        (char *) malloc (cookieSize);                       // 6
-        if (
-            AudioQueueGetProperty (                         // 7
-                                   inQueue,
-                                   kAudioQueueProperty_MagicCookie,
-                                   magicCookie,
-                                   &cookieSize
-                                   ) == noErr
-            )
-            result =    AudioFileSetProperty (                  // 8
-                                              inFile,
-                                              kAudioFilePropertyMagicCookieData,
-                                              cookieSize,
-                                              magicCookie
-                                              );
-        free (magicCookie);                                     // 9
-    }
-    return result;                                              // 10
-}
-
-
-
-
-
 - (id)init {
     if ((self = [self initWithCustomDisplay:nil])) {
         //
@@ -126,38 +28,13 @@ OSStatus SetMagicCookieForFile (
 }
 
 - (id)initWithCustomDisplay:(NSString *)nibName {
-    if ((self = [super init])) {
-        aqData.mDataFormat.mFormatID         = kAudioFormatLinearPCM; 
-        aqData.mDataFormat.mSampleRate       = 16000.0;               
-        aqData.mDataFormat.mChannelsPerFrame = 1;                     
-        aqData.mDataFormat.mBitsPerChannel   = 16;                    
-        aqData.mDataFormat.mBytesPerPacket   =                        
-        aqData.mDataFormat.mBytesPerFrame =
-        aqData.mDataFormat.mChannelsPerFrame * sizeof (SInt16);
-        aqData.mDataFormat.mFramesPerPacket  = 1;                     
-        
-        aqData.mDataFormat.mFormatFlags =                            
-        kLinearPCMFormatFlagIsSignedInteger
-        | kLinearPCMFormatFlagIsPacked;
-        
-        memset(&(aqData.speex_bits), 0, sizeof(SpeexBits));
-        speex_bits_init(&(aqData.speex_bits)); 
-        aqData.speex_enc_state = speex_encoder_init(&speex_wb_mode);
-        
-        int quality = 8;
-        speex_encoder_ctl(aqData.speex_enc_state, SPEEX_SET_QUALITY, &quality);
-        int vbr = 1;
-        speex_encoder_ctl(aqData.speex_enc_state, SPEEX_SET_VBR, &vbr);
-        speex_encoder_ctl(aqData.speex_enc_state, SPEEX_GET_FRAME_SIZE, &(aqData.speex_samples_per_frame));
-        aqData.mQueue = NULL;
-        
+    if ((self = [super init])) {        
         if (nibName) {
+            speechRecorder = [[SpeechToTextRecorder alloc] init];
             sineWave = [[SineWaveViewController alloc] initWithNibName:nibName bundle:nil];
             sineWave.delegate = self;
         }
-        
         [self reset];
-        aqData.selfRef = self;
     }
     return self;
 }
@@ -173,39 +50,17 @@ OSStatus SetMagicCookieForFile (
     [status release];
     sineWave.delegate = nil;
     [sineWave release];
-    speex_bits_destroy(&(aqData.speex_bits));
-    speex_encoder_destroy(aqData.speex_enc_state);
-    [aqData.encodedSpeexData release];
-    AudioQueueDispose(aqData.mQueue, true);
-    AudioFileClose (aqData.mAudioFile); 
     [volumeDataPoints release];
     
     [super dealloc];
 }
 
 - (BOOL)recording {
-    return aqData.mIsRunning;
+    return [speechRecorder recording];
 }
 
 - (void)reset {
-    if (aqData.mQueue != NULL) {
-        AudioQueueDispose(aqData.mQueue, true);
-        AudioFileClose (aqData.mAudioFile); 
-    }
-    UInt32 enableLevelMetering = 1;
-    AudioQueueNewInput(&(aqData.mDataFormat), HandleInputBuffer, &aqData, NULL, kCFRunLoopCommonModes, 0, &(aqData.mQueue));
-    AudioQueueSetProperty(aqData.mQueue, kAudioQueueProperty_EnableLevelMetering, &enableLevelMetering, sizeof(UInt32));
-    DeriveBufferSize(aqData.mQueue, &(aqData.mDataFormat), 0.5, &(aqData.bufferByteSize));
-    
-    for (int i = 0; i < kNumberBuffers; i++) {
-        AudioQueueAllocateBuffer(aqData.mQueue, aqData.bufferByteSize, &(aqData.mBuffers[i]));
-        
-        AudioQueueEnqueueBuffer(aqData.mQueue, aqData.mBuffers[i], 0, NULL);
-    }
-
-    [aqData.encodedSpeexData release];
-    aqData.encodedSpeexData = [[NSMutableData alloc] init];
-    
+    [speechRecorder reset];
     [meterTimer invalidate];
     [meterTimer release];
     samplesBelowSilence = 0;
@@ -222,16 +77,7 @@ OSStatus SetMagicCookieForFile (
 - (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName {
     @synchronized(self) {
         if (!self.recording && !processing) {
-            aqData.transcribeAudio = transcribe;
-            NSString *recordFile = [NSTemporaryDirectory() stringByAppendingPathComponent: (NSString*)fileName];	
-			
-            CFURLRef audioFileURL = CFURLCreateWithString(kCFAllocatorDefault, (CFStringRef)recordFile, NULL);
-            AudioFileCreateWithURL (audioFileURL, kAudioFileCAFType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile);
-            
-            aqData.mCurrentPacket = 0;
-            aqData.mIsRunning = true;
-            [self reset];
-            AudioQueueStart(aqData.mQueue, NULL);
+            [speechRecorder beginRecordingTranscribe:transcribe saveToFile:fileName];
             if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
                 [delegate showSineWaveView:sineWave];
             } else {
@@ -289,15 +135,14 @@ OSStatus SetMagicCookieForFile (
             if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
                 [delegate dismissSineWaveView:sineWave cancelled:!startProcessing];
             
-            AudioQueueStop(aqData.mQueue, true);
-            aqData.mIsRunning = false;
             [meterTimer invalidate];
             [meterTimer release];
             meterTimer = nil;
+            [speechRecorder stopRecording];
             if (startProcessing) {
                 [self cleanUpProcessingThread];
                 processing = YES;
-                processingThread = [[NSThread alloc] initWithTarget:self selector:@selector(postByteData:) object:aqData.encodedSpeexData];
+                processingThread = [[NSThread alloc] initWithTarget:self selector:@selector(postByteData:) object:speechRecorder.encodedSpeexData];
                 [processingThread start];
                 if ([delegate respondsToSelector:@selector(showLoadingView)])
                     [delegate showLoadingView];
@@ -320,11 +165,13 @@ OSStatus SetMagicCookieForFile (
 }
 
 - (void)checkMeter {
+    NSLog(@"Checking meter");
     AudioQueueLevelMeterState meterState;
     AudioQueueLevelMeterState meterStateDB;
     UInt32 ioDataSize = sizeof(AudioQueueLevelMeterState);
-    AudioQueueGetProperty(aqData.mQueue, kAudioQueueProperty_CurrentLevelMeter, &meterState, &ioDataSize);
-    AudioQueueGetProperty(aqData.mQueue, kAudioQueueProperty_CurrentLevelMeterDB, &meterStateDB, &ioDataSize);
+    AudioQueueGetProperty(speechRecorder.mQueue, kAudioQueueProperty_CurrentLevelMeter, &meterState, &ioDataSize);
+    AudioQueueGetProperty(speechRecorder.mQueue, kAudioQueueProperty_CurrentLevelMeterDB, &meterStateDB, &ioDataSize);
+    NSLog(@"%f", meterState.mAveragePower);
     
     [volumeDataPoints removeObjectAtIndex:0];
     float dataPoint;
