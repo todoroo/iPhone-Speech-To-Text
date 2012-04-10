@@ -313,9 +313,9 @@ OSStatus SetMagicCookieForFile (
     CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, recordFilePath, kCFURLPOSIXPathStyle, false);
     if (!sndFile) { printf("can't parse file path\n"); return; }
     
-    OSStatus status = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
+    OSStatus result = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
     NSLog(@"Closed recording");
-    NSLog(@"OSStatus: %ld", status);
+    NSLog(@"OSStatus: %ld", result);
     
 }
 
