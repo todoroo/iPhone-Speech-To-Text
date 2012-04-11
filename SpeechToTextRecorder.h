@@ -25,13 +25,10 @@
 #define kMinVolumeSampleValue 0.01
 #define kMaxVolumeSampleValue 1.0
 
-#define XThrowIfError(error, operation) \
-do {																	\
-OSStatus __err = error;												\
-if (__err) {															\
-NSLog(@"%@", operation); \
-}																	\
-} while (0)
+#define XThrowIfError(error, operation)	\
+if (error) {							\
+NSLog(@"%@", operation);                \
+}
 
 typedef struct AQRecorderState {
     AudioStreamBasicDescription  mDataFormat;                   

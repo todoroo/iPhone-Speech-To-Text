@@ -30,6 +30,14 @@ static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBuffe
     if (inNumPackets == 0 && pAqData->mDataFormat.mBytesPerPacket != 0)
         inNumPackets = inBuffer->mAudioDataByteSize / pAqData->mDataFormat.mBytesPerPacket;
     
+    
+    // handle recording
+    OSStatus result = AudioFileWritePackets (pAqData->mAudioFile, false, inBuffer->mAudioDataByteSize,
+                                             inPacketDesc, pAqData->mCurrentPacket, &inNumPackets,
+                                             inBuffer->mAudioData);
+    XThrowIfError(result, @"Failed to write audio file packets");
+    
+    
     // process speex
     int packets_per_frame = pAqData->speex_samples_per_frame;
     
@@ -43,10 +51,7 @@ static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBuffe
         
         [pAqData->encodedSpeexData appendBytes:cbits length:nbBytes + 1];
     }
-    // handle recording
-    OSStatus result = AudioFileWritePackets (pAqData->mAudioFile, false, inBuffer->mAudioDataByteSize,
-                                             inPacketDesc, pAqData->mCurrentPacket, &inNumPackets,
-                                             inBuffer->mAudioData);
+    
     if (pAqData->transcribeAudio || result == noErr) {
         pAqData->mCurrentPacket += inNumPackets;
     }
@@ -73,39 +78,20 @@ static void DeriveBufferSize (AudioQueueRef audioQueue, AudioStreamBasicDescript
 
 
 
-OSStatus SetMagicCookieForFile (
-                                AudioQueueRef inQueue,                                      // 1
-                                AudioFileID   inFile                                        // 2
-                                ) {
-    OSStatus result = noErr;                                    // 3
-    UInt32 cookieSize;                                          // 4
-    
-    if (
-        AudioQueueGetPropertySize (                         // 5
-                                   inQueue,
-                                   kAudioQueueProperty_MagicCookie,
-                                   &cookieSize
-                                   ) == noErr
-        ) {
+static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile) {
+    OSStatus result = noErr;
+    UInt32 cookieSize;
+    if (AudioQueueGetPropertySize (inQueue, kAudioQueueProperty_MagicCookie,
+                                   &cookieSize) == noErr) {
         char* magicCookie =
-        (char *) malloc (cookieSize);                       // 6
-        if (
-            AudioQueueGetProperty (                         // 7
-                                   inQueue,
-                                   kAudioQueueProperty_MagicCookie,
-                                   magicCookie,
-                                   &cookieSize
-                                   ) == noErr
-            )
-            result =    AudioFileSetProperty (                  // 8
-                                              inFile,
-                                              kAudioFilePropertyMagicCookieData,
-                                              cookieSize,
-                                              magicCookie
-                                              );
-        free (magicCookie);                                     // 9
+        (char *) malloc (cookieSize);
+        if (AudioQueueGetProperty (inQueue, kAudioQueueProperty_MagicCookie,
+                                   magicCookie, &cookieSize) == noErr)
+            result =    AudioFileSetProperty (inFile, kAudioFilePropertyMagicCookieData,
+                                              cookieSize, magicCookie);
+        free (magicCookie);
     }
-    return result;                                              // 10
+    return result;
 }
 
 - (id)init{
@@ -184,12 +170,12 @@ OSStatus SetMagicCookieForFile (
         if (!self.recording) {
             aqData.transcribeAudio = transcribe;	
             
-            XThrowIfError(AudioFileCreateWithURL ((CFURLRef) fileURL, kAudioFileCAFType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
+            [self reset];
             aqData.mCurrentPacket = 0;
             aqData.mIsRunning = true;
-            [self reset];
+            XThrowIfError(AudioFileCreateWithURL ((CFURLRef) fileURL, kAudioFileAAC_ADTSType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
             
-            SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile);
+            XThrowIfError(SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile), @"Error setting magic cookie"); 
             AudioQueueStart(aqData.mQueue, NULL);
         }
     }
@@ -209,9 +195,9 @@ OSStatus SetMagicCookieForFile (
             
             AudioQueueStop(aqData.mQueue, true);
             aqData.mIsRunning = false;
-            SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile);
-            AudioQueueDispose(aqData.mQueue, true);
-            AudioFileClose (aqData.mAudioFile); 
+            XThrowIfError(SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile), @"Error setting magic cookie"); 
+            XThrowIfError(AudioQueueDispose(aqData.mQueue, true), @"Error disposing queue");
+            XThrowIfError(AudioFileClose (aqData.mAudioFile), @"Error file closing"); 
         }
     }
     

@@ -166,18 +166,6 @@
         }
     }
     
-    /*
-     #warning REMOVE
-     CFStringRef recordFilePath = (CFStringRef)[NSTemporaryDirectory() stringByAppendingPathComponent: @"newfile.caf"];
-     
-     AudioFileID mAudioFile = nil;
-     CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, recordFilePath, kCFURLPOSIXPathStyle, false);
-     if (!sndFile) { printf("can't parse file path\n"); return; }
-     
-     OSStatus result = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
-     NSLog(@"Closed recording");
-     NSLog(@"OSStatus: %ld", result);
-     */
 }
 
 - (void)checkMeter {
@@ -245,19 +233,20 @@
 }
 
 #pragma Audio Player
-
++ (BOOL)deleteFile: (NSString *) fName {
+    return [[NSFileManager defaultManager] removeItemAtURL:[SpeechToTextModule urlForFile:fName] error:nil];
+}
 + (BOOL)audioFileExists: (NSString*) fName {
     NSURL *urlRef = [SpeechToTextModule urlForFile:fName];
-    NSLog(@"File exists for path: %@, %d", [urlRef absoluteString], [urlRef checkResourceIsReachableAndReturnError:nil]);
     return [urlRef checkResourceIsReachableAndReturnError:nil];
 }
 
 - (void)playAudioFile: (NSString *) fName {
     if (!audioPlayer) {
         audioPlayer = [[AudioPlayer alloc] init];
+        self.fileName = fName;
+        [audioPlayer beginPlayback:[[self class] urlForFile: fName]];
     }
-    self.fileName = fName;
-    [audioPlayer beginPlayback:[[self class] urlForFile: fName]];
     
     isPlaying = YES;
     

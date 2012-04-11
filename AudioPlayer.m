@@ -13,7 +13,9 @@
 static void HandleOutputBuffer (void *aqData, AudioQueueRef inAQ,
                                 AudioQueueBufferRef inBuffer) {
     AQPlayerState *pAqData = (AQPlayerState *) aqData;
-    if (pAqData->mIsRunning == 0) return;
+    
+#warning FIGURE OUT WHY THIS DOESN't WORK
+    if (!pAqData->mIsRunning) return;
     UInt32 numBytesReadFromFile;
     UInt32 numPackets = pAqData->mNumPacketsToRead;
     XThrowIfError(AudioFileReadPackets (pAqData->mAudioFile, false, &numBytesReadFromFile,
@@ -25,10 +27,7 @@ static void HandleOutputBuffer (void *aqData, AudioQueueRef inAQ,
                                  pAqData->mPacketDescs);
         pAqData->mCurrentPacket += numPackets; 
     } else {
-        AudioQueueStop (
-                        pAqData->mQueue,
-                        false
-                        );
+        AudioQueueStop (pAqData->mQueue, false);
         pAqData->mIsRunning = false; 
     }
 }
@@ -70,12 +69,11 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
 
 -(void) beginPlayback: (NSURL*) fullFilePath {
     
-    AudioFileID mAudioFile = nil;
     /*
     CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, (CFStringRef)fullFilePath, kCFURLPOSIXPathStyle, false);
     if (!sndFile) { printf("can't parse file path\n"); return; }*/
     
-    XThrowIfError(AudioFileOpenURL ((CFURLRef)fullFilePath, kAudioFileReadPermission, 0, &mAudioFile), @"Error opening file url");
+    XThrowIfError(AudioFileOpenURL ((CFURLRef)fullFilePath, kAudioFileReadPermission, 0, &aqData.mAudioFile), @"Error opening file url");
     
     
     UInt32 dataFormatSize = sizeof (aqData.mDataFormat); 
@@ -94,7 +92,7 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
     
     NSLog(@"Setting up new queue");
     XThrowIfError(AudioQueueNewOutput (&aqData.mDataFormat, HandleOutputBuffer, &aqData,
-                                       CFRunLoopGetCurrent (), kCFRunLoopCommonModes, 0, &aqData.mQueue), @"Error queue new output");
+                                       CFRunLoopGetCurrent (), kCFRunLoopCommonModes, 0, &aqData.mQueue), @"Error creating new output");
     
     UInt32 maxPacketSize;
     UInt32 propertySize = sizeof (maxPacketSize);
@@ -105,10 +103,7 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
                       &aqData.bufferByteSize, &aqData.mNumPacketsToRead);
     
     // Allocating Memory for a Packet Descriptions Array
-    bool isFormatVBR = (                                       // 1
-                        aqData.mDataFormat.mBytesPerPacket == 0 ||
-                        aqData.mDataFormat.mFramesPerPacket == 0
-                        );
+    bool isFormatVBR = (aqData.mDataFormat.mBytesPerPacket == 0 || aqData.mDataFormat.mFramesPerPacket == 0);
     
     if (isFormatVBR) {
         aqData.mPacketDescs = (AudioStreamPacketDescription*) malloc (aqData.mNumPacketsToRead * sizeof (AudioStreamPacketDescription));
@@ -135,16 +130,6 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
         free (magicCookie);
     }
     
-    //Allocate and Prime Audio Queue Buffers
-    aqData.mCurrentPacket = 0;
-    
-    for (int i = 0; i < kNumberBuffers; ++i) {
-        AudioQueueAllocateBuffer (aqData.mQueue, aqData.bufferByteSize,
-                                  &aqData.mBuffers[i]);
-        
-        HandleOutputBuffer (&aqData, aqData.mQueue,
-                            aqData.mBuffers[i]);
-    }
     
     //Set an Audio Queue’s Playback Gain
     Float32 gain = 1.0;                                       // 1
@@ -156,7 +141,21 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
     NSLog(@"Starting queue");
     aqData.mIsRunning = true;
     
+    if (true) {
+        //Allocate and Prime Audio Queue Buffers
+        aqData.mCurrentPacket = 0;
+    }
+    for (int i = 0; i < kNumberBuffers; ++i) {
+        AudioQueueAllocateBuffer (aqData.mQueue, aqData.bufferByteSize,
+                                  &aqData.mBuffers[i]);
+        
+        HandleOutputBuffer (&aqData, aqData.mQueue,
+                            aqData.mBuffers[i]);
+    }
+    
     XThrowIfError(AudioQueueStart(aqData.mQueue, NULL), @"Error starting queue") ;
+    
+    
     
     do {
         CFRunLoopRunInMode (kCFRunLoopDefaultMode, 0.25, false);
@@ -178,4 +177,5 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
     
     free (aqData.mPacketDescs);
 }
+
 @end
