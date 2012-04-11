@@ -173,7 +173,7 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
             [self reset];
             aqData.mCurrentPacket = 0;
             aqData.mIsRunning = true;
-            XThrowIfError(AudioFileCreateWithURL ((CFURLRef) fileURL, kAudioFileAAC_ADTSType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
+            XThrowIfError(AudioFileCreateWithURL ((CFURLRef) fileURL, kAudioFileCAFType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
             
             XThrowIfError(SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile), @"Error setting magic cookie"); 
             AudioQueueStart(aqData.mQueue, NULL);

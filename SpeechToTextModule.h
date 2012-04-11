@@ -66,7 +66,7 @@
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.
 - (void)stopRecording:(BOOL)startProcessing;
-
++ (NSURL *) urlForFile: (NSString *) fName;
 + (BOOL)audioFileExists: (NSString*) filePath;
 + (NSString *) fullFilePath: (NSString *) fName;
 - (void)playAudioFile: (NSString *) fName;
