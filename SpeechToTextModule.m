@@ -8,6 +8,7 @@
 
 #import "SpeechToTextModule.h"
 #import "SineWaveViewController.h"
+#import "AudioPlayer.h"
 
 @interface SpeechToTextModule ()
 
@@ -18,7 +19,7 @@
 
 @implementation SpeechToTextModule
 
-@synthesize delegate;
+@synthesize delegate, fileName;
 
 - (id)init {
     if ((self = [self initWithCustomDisplay:nil])) {
@@ -44,6 +45,8 @@
     if (processing) {
         [self cleanUpProcessingThread];
     }
+    [speechRecorder release];
+    [audioPlayer release];
     
     self.delegate = nil;
     status.delegate = nil;
@@ -73,11 +76,14 @@
     }
     sineWave.dataPoints = volumeDataPoints;
 }
-
-- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName {
+- (NSString *) fullFilePath {
+    return [NSTemporaryDirectory() stringByAppendingPathComponent: fileName];
+}
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fName {
     @synchronized(self) {
         if (!self.recording && !processing) {
-            [speechRecorder beginRecordingTranscribe:transcribe saveToFile:fileName];
+            self.fileName = fName;
+            [speechRecorder beginRecordingTranscribe:transcribe saveToFilePath:[self fullFilePath]];
             if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
                 [delegate showSineWaveView:sineWave];
             } else {
@@ -151,17 +157,17 @@
     }
     
     /*
-#warning REMOVE
-    CFStringRef recordFilePath = (CFStringRef)[NSTemporaryDirectory() stringByAppendingPathComponent: @"newfile.caf"];
-    
-    AudioFileID mAudioFile = nil;
-    CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, recordFilePath, kCFURLPOSIXPathStyle, false);
-    if (!sndFile) { printf("can't parse file path\n"); return; }
-    
-    OSStatus result = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
-    NSLog(@"Closed recording");
-    NSLog(@"OSStatus: %ld", result);
-    */
+     #warning REMOVE
+     CFStringRef recordFilePath = (CFStringRef)[NSTemporaryDirectory() stringByAppendingPathComponent: @"newfile.caf"];
+     
+     AudioFileID mAudioFile = nil;
+     CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, recordFilePath, kCFURLPOSIXPathStyle, false);
+     if (!sndFile) { printf("can't parse file path\n"); return; }
+     
+     OSStatus result = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
+     NSLog(@"Closed recording");
+     NSLog(@"OSStatus: %ld", result);
+     */
 }
 
 - (void)checkMeter {
@@ -228,6 +234,22 @@
 - (void)gotResponse:(NSData *)jsonData {
     [self cleanUpProcessingThread];
     [delegate didReceiveVoiceResponse:jsonData];
+}
+
+#pragma Audio Player
+
++ (BOOL) fileExistsForPath: (NSString*) filePath {
+    CFURLRef urlRef = (CFURLRef)[NSURL fileURLWithPath:filePath];
+    struct FSRef *fileRef = nil;
+    CFURLGetFSRef(urlRef, fileRef);
+    return (fileRef != nil);
+}
+
+- (void) play {
+    if (!audioPlayer) {
+        audioPlayer = [[AudioPlayer alloc] init];
+    }
+    [audioPlayer startQueue];
 }
 
 @end

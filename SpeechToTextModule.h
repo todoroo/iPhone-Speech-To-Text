@@ -27,10 +27,12 @@
 
 @end
 
+@class AudioPlayer;
 @interface SpeechToTextModule : NSObject <UIAlertViewDelegate, SineWaveViewDelegate> {
     UIAlertView *status;
     
     SpeechToTextRecorder *speechRecorder;
+    AudioPlayer *audioPlayer;
     
     BOOL detectedSpeech;
     int samplesBelowSilence;
@@ -42,8 +44,10 @@
     SineWaveViewController *sineWave;
     
     NSThread *processingThread;
+    
+    NSString *fileName;
 }
-
+@property (nonatomic, retain) NSString *fileName;
 @property (readonly) BOOL recording;
 @property (assign) id<SpeechToTextModuleDelegate> delegate;
 

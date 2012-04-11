@@ -67,7 +67,7 @@ typedef struct AQRecorderState {
 - (NSData *) encodedSpeexData;
 - (AudioQueueRef) mQueue;
 // Begins a voice recording
-- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName;
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFilePath: (NSString*) fullFilePath;
 
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.

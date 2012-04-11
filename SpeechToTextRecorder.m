@@ -44,7 +44,7 @@ static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBuffe
         [pAqData->encodedSpeexData appendBytes:cbits length:nbBytes + 1];
     }
     // handle recording
-    if (!pAqData->transcribeAudio || AudioFileWritePackets (
+    if (pAqData->transcribeAudio || AudioFileWritePackets (
                                                             pAqData->mAudioFile,
                                                             false,
                                                             inBuffer->mAudioDataByteSize,
@@ -184,18 +184,19 @@ OSStatus SetMagicCookieForFile (
     
 }
 
-- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName {
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFilePath: (NSString*) fullFilePath {
     @synchronized(self) {
         if (!self.recording) {
-            aqData.transcribeAudio = transcribe;
-            NSString *recordFile = [NSTemporaryDirectory() stringByAppendingPathComponent: (NSString*)fileName];	
+            aqData.transcribeAudio = transcribe;	
 			
-            CFURLRef audioFileURL = CFURLCreateWithString(kCFAllocatorDefault, (CFStringRef)recordFile, NULL);
+            CFURLRef audioFileURL = CFURLCreateWithString(kCFAllocatorDefault, (CFStringRef)fullFilePath, NULL);
             AudioFileCreateWithURL (audioFileURL, kAudioFileCAFType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile);
             
             aqData.mCurrentPacket = 0;
             aqData.mIsRunning = true;
             [self reset];
+            
+            SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile);
             AudioQueueStart(aqData.mQueue, NULL);
         }
     }
@@ -215,6 +216,9 @@ OSStatus SetMagicCookieForFile (
             
             AudioQueueStop(aqData.mQueue, true);
             aqData.mIsRunning = false;
+            SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile);
+            AudioQueueDispose(aqData.mQueue, true);
+            AudioFileClose (aqData.mAudioFile); 
         }
     }
     
