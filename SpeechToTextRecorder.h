@@ -24,6 +24,15 @@
 // For scaling display
 #define kMinVolumeSampleValue 0.01
 #define kMaxVolumeSampleValue 1.0
+
+#define XThrowIfError(error, operation) \
+do {																	\
+OSStatus __err = error;												\
+if (__err) {															\
+NSLog(@"%@", operation); \
+}																	\
+} while (0)
+
 typedef struct AQRecorderState {
     AudioStreamBasicDescription  mDataFormat;                   
     AudioQueueRef                mQueue;                        
@@ -67,7 +76,7 @@ typedef struct AQRecorderState {
 - (NSData *) encodedSpeexData;
 - (AudioQueueRef) mQueue;
 // Begins a voice recording
-- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFilePath: (NSString*) fullFilePath;
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSURL*) fileURL;
 
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.

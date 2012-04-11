@@ -16,9 +16,9 @@ static void HandleOutputBuffer (void *aqData, AudioQueueRef inAQ,
     if (pAqData->mIsRunning == 0) return;
     UInt32 numBytesReadFromFile;
     UInt32 numPackets = pAqData->mNumPacketsToRead;
-    AudioFileReadPackets (pAqData->mAudioFile, false, &numBytesReadFromFile,
+    XThrowIfError(AudioFileReadPackets (pAqData->mAudioFile, false, &numBytesReadFromFile,
                           pAqData->mPacketDescs, pAqData->mCurrentPacket, &numPackets,
-                          inBuffer->mAudioData);
+                          inBuffer->mAudioData), @"Error reading audio file packets");
     if (numPackets > 0) {
         inBuffer->mAudioDataByteSize = numBytesReadFromFile;
         AudioQueueEnqueueBuffer (pAqData->mQueue, inBuffer, (pAqData->mPacketDescs ? numPackets : 0),
@@ -36,7 +36,6 @@ static void HandleOutputBuffer (void *aqData, AudioQueueRef inAQ,
 static void isRunningProc (void *aqData, AudioQueueRef inAQ, AudioQueuePropertyID inID)
 {
     
-    NSLog(@"is running proc");
 	AQPlayerState *pAqData = (AQPlayerState *)aqData;
 	UInt32 size = sizeof(pAqData->mIsRunning);
 	OSStatus result = AudioQueueGetProperty (inAQ, kAudioQueueProperty_IsRunning, &pAqData->mIsRunning, &size);
@@ -48,8 +47,8 @@ static void isRunningProc (void *aqData, AudioQueueRef inAQ, AudioQueuePropertyI
 static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPacketSize,
                               Float64 seconds, UInt32 *outBufferSize,                     
                               UInt32 *outNumPacketsToRead) {
-    static const int maxBufferSize = 0x50000;                        // 6
-    static const int minBufferSize = 0x4000;                         // 7
+    static const int maxBufferSize = 0x50000;
+    static const int minBufferSize = 0x4000;
     
     if (ASBDesc->mFramesPerPacket != 0) {
         Float64 numPacketsForTime =
@@ -69,25 +68,20 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
     *outNumPacketsToRead = *outBufferSize / maxPacketSize; 
 }
 
--(void) beginPlayback: (NSString*) fileName {
-    CFStringRef recordFilePath = (CFStringRef)[NSTemporaryDirectory() stringByAppendingPathComponent: fileName];
+-(void) beginPlayback: (NSURL*) fullFilePath {
     
-    NSLog(@"Beginning playback");
     AudioFileID mAudioFile = nil;
-    CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, recordFilePath, kCFURLPOSIXPathStyle, false);
-    if (!sndFile) { printf("can't parse file path\n"); return; }
+    /*
+    CFURLRef sndFile = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, (CFStringRef)fullFilePath, kCFURLPOSIXPathStyle, false);
+    if (!sndFile) { printf("can't parse file path\n"); return; }*/
     
-    OSStatus result = AudioFileOpenURL (sndFile, kAudioFileReadPermission, 0, &mAudioFile);
+    XThrowIfError(AudioFileOpenURL ((CFURLRef)fullFilePath, kAudioFileReadPermission, 0, &mAudioFile), @"Error opening file url");
     
-#warning Release
-    //    CFRelease (mAudioFile);                               // 7
-    NSLog(@"Closed recording");
-    NSLog(@"OSStatus: %ld", result);
     
     UInt32 dataFormatSize = sizeof (aqData.mDataFormat); 
     
-    AudioFileGetProperty (aqData.mAudioFile, kAudioFilePropertyDataFormat,
-                          &dataFormatSize, &aqData.mDataFormat);
+    XThrowIfError( AudioFileGetProperty (aqData.mAudioFile, kAudioFilePropertyDataFormat,
+                                         &dataFormatSize, &aqData.mDataFormat), @"Error getting file property");
     [self setUpNewQueue];
     
 #warning release
@@ -99,25 +93,16 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
 -(void) setUpNewQueue {
     
     NSLog(@"Setting up new queue");
-    AudioQueueNewOutput (&aqData.mDataFormat, HandleOutputBuffer, &aqData,
-                         CFRunLoopGetCurrent (), kCFRunLoopCommonModes, 0, &aqData.mQueue);
+    XThrowIfError(AudioQueueNewOutput (&aqData.mDataFormat, HandleOutputBuffer, &aqData,
+                                       CFRunLoopGetCurrent (), kCFRunLoopCommonModes, 0, &aqData.mQueue), @"Error queue new output");
     
     UInt32 maxPacketSize;
     UInt32 propertySize = sizeof (maxPacketSize);
-    AudioFileGetProperty (                               // 1
-                          aqData.mAudioFile,                               // 2
-                          kAudioFilePropertyPacketSizeUpperBound,          // 3
-                          &propertySize,                                   // 4
-                          &maxPacketSize                                   // 5
-                          );
+    XThrowIfError(AudioFileGetProperty (aqData.mAudioFile, kAudioFilePropertyPacketSizeUpperBound, 
+                                        &propertySize, &maxPacketSize), @"Error Still can't get property");
     
-    DeriveBufferSize (                                   // 6
-                      &aqData.mDataFormat,                              // 7
-                      maxPacketSize,                                   // 8
-                      0.5,                                             // 9
-                      &aqData.bufferByteSize,                          // 10
-                      &aqData.mNumPacketsToRead                        // 11
-                      );
+    DeriveBufferSize (&aqData.mDataFormat, maxPacketSize, 0.5,
+                      &aqData.bufferByteSize, &aqData.mNumPacketsToRead);
     
     // Allocating Memory for a Packet Descriptions Array
     bool isFormatVBR = (                                       // 1
@@ -125,79 +110,53 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
                         aqData.mDataFormat.mFramesPerPacket == 0
                         );
     
-    if (isFormatVBR) {                                         // 2
-        aqData.mPacketDescs =
-        (AudioStreamPacketDescription*) malloc (
-                                                aqData.mNumPacketsToRead * sizeof (AudioStreamPacketDescription)
-                                                );
-    } else {                                                   // 3
+    if (isFormatVBR) {
+        aqData.mPacketDescs = (AudioStreamPacketDescription*) malloc (aqData.mNumPacketsToRead * sizeof (AudioStreamPacketDescription));
+    } else {
         aqData.mPacketDescs = NULL;
     }
     
     
     // cookie stuff
-    UInt32 cookieSize = sizeof (UInt32);                   // 1
-    bool couldNotGetProperty =                             // 2
-    AudioFileGetPropertyInfo (                         // 3
-                              aqData.mAudioFile,                             // 4
-                              kAudioFilePropertyMagicCookieData,             // 5
-                              &cookieSize,                                   // 6
-                              NULL                                           // 7
-                              );
+    UInt32 cookieSize = sizeof (UInt32);
+    bool couldNotGetProperty = AudioFileGetPropertyInfo ( aqData.mAudioFile, kAudioFilePropertyMagicCookieData,
+                              &cookieSize, NULL);
     
-    if (!couldNotGetProperty && cookieSize) {              // 8
-        char* magicCookie =
-        (char *) malloc (cookieSize);
+    if (!couldNotGetProperty && cookieSize) {
+        NSLog(@"Could not get property");
+        char* magicCookie = (char *) malloc (cookieSize);
         
-        AudioFileGetProperty (                             // 9
-                              aqData.mAudioFile,                             // 10
-                              kAudioFilePropertyMagicCookieData,             // 11
-                              &cookieSize,                                   // 12
-                              magicCookie                                    // 13
-                              );
+        AudioFileGetProperty (aqData.mAudioFile, kAudioFilePropertyMagicCookieData,
+                              &cookieSize, magicCookie);
         
-        AudioQueueSetProperty (                            // 14
-                               aqData.mQueue,                                 // 15
-                               kAudioQueueProperty_MagicCookie,               // 16
-                               magicCookie,                                   // 17
-                               cookieSize                                     // 18
-                               );
+        AudioQueueSetProperty (aqData.mQueue, kAudioQueueProperty_MagicCookie,
+                               magicCookie, cookieSize);
         
-        free (magicCookie);                                // 19
+        free (magicCookie);
     }
     
     //Allocate and Prime Audio Queue Buffers
-    aqData.mCurrentPacket = 0;                                // 1
+    aqData.mCurrentPacket = 0;
     
-    for (int i = 0; i < kNumberBuffers; ++i) {                // 2
-        AudioQueueAllocateBuffer (                            // 3
-                                  aqData.mQueue,                                    // 4
-                                  aqData.bufferByteSize,                            // 5
-                                  &aqData.mBuffers[i]                               // 6
-                                  );
+    for (int i = 0; i < kNumberBuffers; ++i) {
+        AudioQueueAllocateBuffer (aqData.mQueue, aqData.bufferByteSize,
+                                  &aqData.mBuffers[i]);
         
-        HandleOutputBuffer (                                  // 7
-                            &aqData,                                          // 8
-                            aqData.mQueue,                                    // 9
-                            aqData.mBuffers[i]                                // 10
-                            );
+        HandleOutputBuffer (&aqData, aqData.mQueue,
+                            aqData.mBuffers[i]);
     }
     
     //Set an Audio Queue’s Playback Gain
     Float32 gain = 1.0;                                       // 1
     // Optionally, allow user to override gain setting here
-    AudioQueueSetParameter (                                  // 2
-                            aqData.mQueue,                                        // 3
-                            kAudioQueueParam_Volume,                              // 4
-                            gain                                                  // 5
-                            );
+    AudioQueueSetParameter (aqData.mQueue, kAudioQueueParam_Volume, gain);
 	AudioQueueAddPropertyListener(aqData.mQueue, kAudioQueueProperty_IsRunning, isRunningProc, &aqData);
 }
 -(void) startQueue {
     NSLog(@"Starting queue");
     aqData.mIsRunning = true;
     
-    AudioQueueStart (aqData.mQueue, NULL);
+    XThrowIfError(AudioQueueStart(aqData.mQueue, NULL), @"Error starting queue") ;
     
     do {
         CFRunLoopRunInMode (kCFRunLoopDefaultMode, 0.25, false);
@@ -207,13 +166,10 @@ static void DeriveBufferSize (AudioStreamBasicDescription *ASBDesc, UInt32 maxPa
 }
 -(void) stopQueue {
     NSLog(@"Stopping queue");
-    OSStatus result = AudioQueueStop(aqData.mQueue, true);
-    if (result) {
-        NSLog(@"Error stopping queue");
-    }
+    XThrowIfError(AudioQueueStop(aqData.mQueue, true), @"Error stopping queue") ;
 }
 -(void) pauseQueue {
-    AudioQueuePause(aqData.mQueue);
+    XThrowIfError(AudioQueuePause(aqData.mQueue), @"Error pausing queue") ;
 }
 -(void) disposeQueue {
     AudioQueueDispose (aqData.mQueue, true);

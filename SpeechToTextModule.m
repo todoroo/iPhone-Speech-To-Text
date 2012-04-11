@@ -19,7 +19,7 @@
 
 @implementation SpeechToTextModule
 
-@synthesize delegate, fileName;
+@synthesize delegate, fileName, isPlaying;
 
 - (id)init {
     if ((self = [self initWithCustomDisplay:nil])) {
@@ -76,14 +76,24 @@
     }
     sineWave.dataPoints = volumeDataPoints;
 }
-- (NSString *) fullFilePath {
-    return [NSTemporaryDirectory() stringByAppendingPathComponent: fileName];
+
++ (NSURL *)applicationDocumentsDirectory
+{
+    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+}
+
++ (NSURL *) urlForFile: (NSString *) fName {
+    return [[[self class] applicationDocumentsDirectory] URLByAppendingPathComponent:fName];
+}
++ (NSString *) fullFilePath: (NSString *) fName {
+    return [[[[self class] applicationDocumentsDirectory] absoluteString] stringByAppendingPathExtension:fName];
 }
 - (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fName {
     @synchronized(self) {
         if (!self.recording && !processing) {
             self.fileName = fName;
-            [speechRecorder beginRecordingTranscribe:transcribe saveToFilePath:[self fullFilePath]];
+            [self reset];
+            [speechRecorder beginRecordingTranscribe:transcribe saveToFile:[[self class] urlForFile: fileName]];
             if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
                 [delegate showSineWaveView:sineWave];
             } else {
@@ -171,13 +181,11 @@
 }
 
 - (void)checkMeter {
-    NSLog(@"Checking meter");
     AudioQueueLevelMeterState meterState;
     AudioQueueLevelMeterState meterStateDB;
     UInt32 ioDataSize = sizeof(AudioQueueLevelMeterState);
     AudioQueueGetProperty(speechRecorder.mQueue, kAudioQueueProperty_CurrentLevelMeter, &meterState, &ioDataSize);
     AudioQueueGetProperty(speechRecorder.mQueue, kAudioQueueProperty_CurrentLevelMeterDB, &meterStateDB, &ioDataSize);
-    NSLog(@"%f", meterState.mAveragePower);
     
     [volumeDataPoints removeObjectAtIndex:0];
     float dataPoint;
@@ -238,18 +246,32 @@
 
 #pragma Audio Player
 
-+ (BOOL) fileExistsForPath: (NSString*) filePath {
-    CFURLRef urlRef = (CFURLRef)[NSURL fileURLWithPath:filePath];
-    struct FSRef *fileRef = nil;
-    CFURLGetFSRef(urlRef, fileRef);
-    return (fileRef != nil);
++ (BOOL)audioFileExists: (NSString*) fName {
+    NSURL *urlRef = [SpeechToTextModule urlForFile:fName];
+    NSLog(@"File exists for path: %@, %d", [urlRef absoluteString], [urlRef checkResourceIsReachableAndReturnError:nil]);
+    return [urlRef checkResourceIsReachableAndReturnError:nil];
 }
 
-- (void) play {
+- (void)playAudioFile: (NSString *) fName {
     if (!audioPlayer) {
         audioPlayer = [[AudioPlayer alloc] init];
     }
+    self.fileName = fName;
+    [audioPlayer beginPlayback:[[self class] urlForFile: fName]];
+    
+    isPlaying = YES;
+    
     [audioPlayer startQueue];
+}
+
+- (void)pauseAudio {
+    [audioPlayer pauseQueue];
+    isPlaying = NO;
+}
+
+- (void)stopAudio {
+    [audioPlayer stopQueue];
+    isPlaying = NO;
 }
 
 @end

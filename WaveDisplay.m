@@ -48,7 +48,6 @@
     CGContextMoveToPoint(context, x, y);
     BOOL down = NO;
     for (NSNumber *point in self.dataPoints) {
-        NSLog(@"%@", point);
         // Draw curve
         CGFloat raw = [point floatValue] * scaleFactor;
         CGFloat draw = (down ? -raw : raw);

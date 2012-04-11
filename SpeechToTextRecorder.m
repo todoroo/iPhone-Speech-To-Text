@@ -44,15 +44,10 @@ static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBuffe
         [pAqData->encodedSpeexData appendBytes:cbits length:nbBytes + 1];
     }
     // handle recording
-    if (pAqData->transcribeAudio || AudioFileWritePackets (
-                                                            pAqData->mAudioFile,
-                                                            false,
-                                                            inBuffer->mAudioDataByteSize,
-                                                            inPacketDesc,
-                                                            pAqData->mCurrentPacket,
-                                                            &inNumPackets,
-                                                            inBuffer->mAudioData
-                                                            ) == noErr) {
+    OSStatus result = AudioFileWritePackets (pAqData->mAudioFile, false, inBuffer->mAudioDataByteSize,
+                                             inPacketDesc, pAqData->mCurrentPacket, &inNumPackets,
+                                             inBuffer->mAudioData);
+    if (pAqData->transcribeAudio || result == noErr) {
         pAqData->mCurrentPacket += inNumPackets;
     }
     
@@ -184,14 +179,12 @@ OSStatus SetMagicCookieForFile (
     
 }
 
-- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFilePath: (NSString*) fullFilePath {
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSURL*) fileURL {
     @synchronized(self) {
         if (!self.recording) {
             aqData.transcribeAudio = transcribe;	
-			
-            CFURLRef audioFileURL = CFURLCreateWithString(kCFAllocatorDefault, (CFStringRef)fullFilePath, NULL);
-            AudioFileCreateWithURL (audioFileURL, kAudioFileCAFType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile);
             
+            XThrowIfError(AudioFileCreateWithURL ((CFURLRef) fileURL, kAudioFileCAFType, &aqData.mDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
             aqData.mCurrentPacket = 0;
             aqData.mIsRunning = true;
             [self reset];

@@ -26,6 +26,9 @@ typedef struct AQPlayerState {
     AQPlayerState aqData;
 }
 -(void) startQueue;
+-(void) pauseQueue;
+-(void) stopQueue;
+-(void) disposeQueue;
 -(void) setUpNewQueue;
--(void) beginPlayback: (NSString*) fileName;
+-(void) beginPlayback: (NSURL*) fullFilePath;
 @end

@@ -46,10 +46,13 @@
     NSThread *processingThread;
     
     NSString *fileName;
+    
+    BOOL isPlaying;
 }
 @property (nonatomic, retain) NSString *fileName;
 @property (readonly) BOOL recording;
 @property (assign) id<SpeechToTextModuleDelegate> delegate;
+@property (readonly) BOOL isPlaying;
 
 /* Caller can pass a non-nil nib name to specify the nib with which to create
  a SineWaveViewController (nib should conform to the spec in the SineWaveViewController
@@ -63,5 +66,11 @@
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.
 - (void)stopRecording:(BOOL)startProcessing;
+
++ (BOOL)audioFileExists: (NSString*) filePath;
++ (NSString *) fullFilePath: (NSString *) fName;
+- (void)playAudioFile: (NSString *) fName;
+- (void)stopAudio;
+- (void)pauseAudio;
 
 @end
