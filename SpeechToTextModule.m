@@ -105,13 +105,13 @@
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
     if (self.recording && buttonIndex == 0) {
-        [self stopRecording:YES];
+        [self stopRecording:NO];
     }
 }
 
 - (void)sineWaveDoneAction {
     if (self.recording)
-        [self stopRecording:YES];
+        [self stopRecording:NO];
     else if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)]) {
         [delegate dismissSineWaveView:sineWave cancelled:NO];
     }
@@ -127,7 +127,7 @@
 
 - (void)sineWaveCancelAction {
     if (self.recording) {
-        [self stopRecording:NO];
+        [self stopRecording:YES];
     } else {
         if (processing) {
             [processingThread cancel];
@@ -199,7 +199,7 @@
         if (meterStateDB.mAveragePower < kSilenceThresholdDB) {
             samplesBelowSilence++;
             if (samplesBelowSilence > kSilenceThresholdNumSamples)
-                [self stopRecording:YES];
+                [self stopRecording:NO];
         } else {
             samplesBelowSilence = 0;
         }
