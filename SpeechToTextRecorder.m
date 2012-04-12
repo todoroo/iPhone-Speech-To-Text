@@ -185,8 +185,12 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     return aqData.encodedSpeexData;
 }
 
-- (AudioQueueRef) mQueue {
+- (AudioQueueRef)mQueue {
     return aqData.mQueue;
+}
+
+- (BOOL) transcribe {
+    return aqData.transcribeAudio;
 }
 
 - (void)stopRecording {

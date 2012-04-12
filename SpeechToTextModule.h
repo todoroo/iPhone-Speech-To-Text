@@ -27,12 +27,10 @@
 
 @end
 
-@class AudioPlayer;
 @interface SpeechToTextModule : NSObject <UIAlertViewDelegate, SineWaveViewDelegate> {
     UIAlertView *status;
     
     SpeechToTextRecorder *speechRecorder;
-    AudioPlayer *audioPlayer;
     
     BOOL detectedSpeech;
     int samplesBelowSilence;
@@ -66,11 +64,11 @@
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.
 - (void)stopRecording:(BOOL)startProcessing;
+
 + (NSURL *) urlForFile: (NSString *) fName;
 + (BOOL)audioFileExists: (NSString*) filePath;
 + (NSString *) fullFilePath: (NSString *) fName;
-- (void)playAudioFile: (NSString *) fName;
-- (void)stopAudio;
-- (void)pauseAudio;
++ (BOOL)deleteFile: (NSString *) fName;
++ (BOOL)renameFile: (NSString *) fName toNewFileName: (NSString *) newFileName;
 
 @end

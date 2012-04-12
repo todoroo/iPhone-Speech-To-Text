@@ -72,6 +72,7 @@ typedef struct AQRecorderState {
 - (void) reset;
 - (NSData *) encodedSpeexData;
 - (AudioQueueRef) mQueue;
+- (BOOL) transcribe;
 // Begins a voice recording
 - (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSURL*) fileURL;
 

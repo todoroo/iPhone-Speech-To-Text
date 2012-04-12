@@ -142,8 +142,6 @@
 		2253D53C1443D470004EF35F /* SpeechToTextModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 2253D53A1443D470004EF35F /* SpeechToTextModule.m */; };
 		370DD2361534EA650005B02D /* SpeechToTextRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 370DD2341534EA650005B02D /* SpeechToTextRecorder.h */; };
 		370DD2371534EA650005B02D /* SpeechToTextRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 370DD2351534EA650005B02D /* SpeechToTextRecorder.m */; };
-		37D1E3E01533E8E600AA4A17 /* AudioPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 37D1E3DE1533E8E600AA4A17 /* AudioPlayer.h */; };
-		37D1E3E11533E8E600AA4A17 /* AudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 37D1E3DF1533E8E600AA4A17 /* AudioPlayer.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -346,8 +344,6 @@
 		2253D53A1443D470004EF35F /* SpeechToTextModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SpeechToTextModule.m; sourceTree = "<group>"; };
 		370DD2341534EA650005B02D /* SpeechToTextRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpeechToTextRecorder.h; sourceTree = "<group>"; };
 		370DD2351534EA650005B02D /* SpeechToTextRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SpeechToTextRecorder.m; sourceTree = "<group>"; };
-		37D1E3DE1533E8E600AA4A17 /* AudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPlayer.h; sourceTree = "<group>"; };
-		37D1E3DF1533E8E600AA4A17 /* AudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioPlayer.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -369,8 +365,6 @@
 			children = (
 				370DD2341534EA650005B02D /* SpeechToTextRecorder.h */,
 				370DD2351534EA650005B02D /* SpeechToTextRecorder.m */,
-				37D1E3DE1533E8E600AA4A17 /* AudioPlayer.h */,
-				37D1E3DF1533E8E600AA4A17 /* AudioPlayer.m */,
 				2253D5391443D470004EF35F /* SpeechToTextModule.h */,
 				2253D53A1443D470004EF35F /* SpeechToTextModule.m */,
 				224861281444AB0C00796103 /* SineWaveViewController.h */,
@@ -733,7 +727,6 @@
 				2228374E143EA26C000D6E05 /* ogg.h in Headers */,
 				2228374F143EA26C000D6E05 /* os_types.h in Headers */,
 				224861BF1444D21D00796103 /* WaveDisplay.h in Headers */,
-				37D1E3E01533E8E600AA4A17 /* AudioPlayer.h in Headers */,
 				370DD2361534EA650005B02D /* SpeechToTextRecorder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -852,7 +845,6 @@
 				2253D53C1443D470004EF35F /* SpeechToTextModule.m in Sources */,
 				2248612B1444AB0C00796103 /* SineWaveViewController.m in Sources */,
 				224861C01444D21D00796103 /* WaveDisplay.m in Sources */,
-				37D1E3E11533E8E600AA4A17 /* AudioPlayer.m in Sources */,
 				370DD2371534EA650005B02D /* SpeechToTextRecorder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

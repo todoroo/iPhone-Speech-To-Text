@@ -8,7 +8,6 @@
 
 #import "SpeechToTextModule.h"
 #import "SineWaveViewController.h"
-#import "AudioPlayer.h"
 
 @interface SpeechToTextModule ()
 
@@ -46,7 +45,6 @@
         [self cleanUpProcessingThread];
     }
     [speechRecorder release];
-    [audioPlayer release];
     
     self.delegate = nil;
     status.delegate = nil;
@@ -141,7 +139,7 @@
     }
 }
 
-- (void)stopRecording:(BOOL)startProcessing {
+- (void)stopRecording:(BOOL)recordCancelled {
     @synchronized(self) {
         if (self.recording) {
             [status dismissWithClickedButtonIndex:-1 animated:YES];
@@ -149,13 +147,23 @@
             status = nil;
             
             if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
-                [delegate dismissSineWaveView:sineWave cancelled:!startProcessing];
+                [delegate dismissSineWaveView:sineWave cancelled:recordCancelled];
             
             [meterTimer invalidate];
             [meterTimer release];
             meterTimer = nil;
             [speechRecorder stopRecording];
-            if (startProcessing) {
+            
+            if (recordCancelled) {
+#warning FIGURE OUT IF WE SHOULD CANCEL IN MODULE OR NOT
+                if ([fileName length] != 0) {
+                    [SpeechToTextModule deleteFile:fileName];
+                    fileName = nil;
+                }
+                return;
+            }
+
+            if ([speechRecorder transcribe]) {
                 [self cleanUpProcessingThread];
                 processing = YES;
                 processingThread = [[NSThread alloc] initWithTarget:self selector:@selector(postByteData:) object:speechRecorder.encodedSpeexData];
@@ -240,27 +248,10 @@
     NSURL *urlRef = [SpeechToTextModule urlForFile:fName];
     return [urlRef checkResourceIsReachableAndReturnError:nil];
 }
++ (BOOL)renameFile: (NSString *) fName toNewFileName: (NSString *) newFileName {
+    NSURL *oldUrlRef = [SpeechToTextModule urlForFile:fName];
+    NSURL *newUrlRef = [SpeechToTextModule urlForFile:newFileName];
+    return [[NSFileManager defaultManager] moveItemAtURL:oldUrlRef toURL:newUrlRef error:nil];
 
-- (void)playAudioFile: (NSString *) fName {
-    if (!audioPlayer) {
-        audioPlayer = [[AudioPlayer alloc] init];
-        self.fileName = fName;
-        [audioPlayer beginPlayback:[[self class] urlForFile: fName]];
-    }
-    
-    isPlaying = YES;
-    
-    [audioPlayer startQueue];
 }
-
-- (void)pauseAudio {
-    [audioPlayer pauseQueue];
-    isPlaying = NO;
-}
-
-- (void)stopAudio {
-    [audioPlayer stopQueue];
-    isPlaying = NO;
-}
-
 @end
