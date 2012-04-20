@@ -184,17 +184,6 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     AudioQueueSetProperty(aqData.mQueue, kAudioQueueProperty_EnableLevelMetering, &enableLevelMetering, sizeof(UInt32));
     DeriveBufferSize(aqData.mQueue, &(aqData.mDataFormat), 0.5, &(aqData.bufferByteSize));
     
-    
-    aqData.recordDataFormat.mSampleRate       = 16000.0;
-    aqData.recordDataFormat.mFormatID         = kAudioFormatMPEG4AAC; 
-    aqData.recordDataFormat.mChannelsPerFrame = 1;
-    
-    aqData.recordDataFormat.mBitsPerChannel   = 16;                    
-    aqData.recordDataFormat.mBytesPerPacket   =                        
-    aqData.recordDataFormat.mBytesPerFrame =
-    aqData.recordDataFormat.mChannelsPerFrame * sizeof (SInt16);
-    aqData.recordDataFormat.mFramesPerPacket  = 1;        
-    
     AudioStreamBasicDescription captureFormat;
     captureFormat.mSampleRate = 16000.0;
     captureFormat.mFormatID = kAudioFormatLinearPCM;
@@ -204,8 +193,8 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     captureFormat.mBitsPerChannel = 8 * sizeof(AudioUnitSampleType);
     captureFormat.mBytesPerPacket = captureFormat.mBytesPerFrame = 1 * sizeof(AudioUnitSampleType);
 
-    
-    XThrowIfError(ExtAudioFileCreateWithURL((CFURLRef) fileURL, kAudioFileCAFType, &aqData.recordDataFormat, NULL, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
+    aqData.mAudioFile = 0;
+    XThrowIfError(ExtAudioFileCreateWithURL((CFURLRef) fileURL, kAudioFileM4AType, &aqData.recordDataFormat, NULL, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
     
     ExtAudioFileSetProperty(aqData.mAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(captureFormat), &captureFormat);
 
