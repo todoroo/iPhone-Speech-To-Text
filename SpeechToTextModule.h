@@ -43,11 +43,11 @@
     
     NSThread *processingThread;
     
-    NSString *fileName;
+    NSURL *fileName;
     
     BOOL isPlaying;
 }
-@property (nonatomic, retain) NSString *fileName;
+@property (nonatomic, retain) NSURL *fileName;
 @property (readonly) BOOL recording;
 @property (assign) id<SpeechToTextModuleDelegate> delegate;
 @property (readonly) BOOL isPlaying;

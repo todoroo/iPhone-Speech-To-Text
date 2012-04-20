@@ -71,7 +71,7 @@ typedef struct AQRecorderState {
  interface). A nil argument will cause the module to display an alert view instead
  of the custom view controller. */
 - (void) stopRecording;
-- (void) reset;
+- (void)reset: (NSURL*) fileURL;
 - (NSData *) encodedSpeexData;
 - (AudioQueueRef) mQueue;
 - (BOOL) transcribe;

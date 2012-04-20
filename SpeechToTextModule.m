@@ -34,7 +34,6 @@
             sineWave = [[SineWaveViewController alloc] initWithNibName:nibName bundle:nil];
             sineWave.delegate = self;
         }
-        [self reset];
     }
     return self;
 }
@@ -61,7 +60,7 @@
 }
 
 - (void)reset {
-    [speechRecorder reset];
+    [speechRecorder reset: fileName];
     [meterTimer invalidate];
     [meterTimer release];
     samplesBelowSilence = 0;
@@ -79,7 +78,7 @@
     @synchronized(self) {
         if (!self.recording && !processing) {
 #warning Filename not used. delete it
-//            self.fileName = fName;
+            self.fileName = fName;
             [self reset];
             [speechRecorder beginRecordingTranscribe:transcribe saveToFile:fName];
             if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
