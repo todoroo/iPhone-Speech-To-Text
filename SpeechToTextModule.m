@@ -75,23 +75,13 @@
     sineWave.dataPoints = volumeDataPoints;
 }
 
-+ (NSURL *)applicationDocumentsDirectory
-{
-    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-}
-
-+ (NSURL *) urlForFile: (NSString *) fName {
-    return [[[self class] applicationDocumentsDirectory] URLByAppendingPathComponent:fName];
-}
-+ (NSString *) fullFilePath: (NSString *) fName {
-    return [[[[self class] applicationDocumentsDirectory] absoluteString] stringByAppendingPathExtension:fName];
-}
-- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fName {
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFilePath: (NSURL*) fName {
     @synchronized(self) {
         if (!self.recording && !processing) {
-            self.fileName = fName;
+#warning Filename not used. delete it
+//            self.fileName = fName;
             [self reset];
-            [speechRecorder beginRecordingTranscribe:transcribe saveToFile:[[self class] urlForFile: fileName]];
+            [speechRecorder beginRecordingTranscribe:transcribe saveToFile:fName];
             if (sineWave && [delegate respondsToSelector:@selector(showSineWaveView:)]) {
                 [delegate showSineWaveView:sineWave];
             } else {
@@ -146,8 +136,6 @@
             [status release];
             status = nil;
             
-            if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
-                [delegate dismissSineWaveView:sineWave cancelled:recordCancelled];
             
             [meterTimer invalidate];
             [meterTimer release];
@@ -155,14 +143,18 @@
             [speechRecorder stopRecording];
             
             if (recordCancelled) {
-#warning FIGURE OUT IF WE SHOULD CANCEL IN MODULE OR NOT
+                
+               /* #warning FIGURE OUT IF WE SHOULD CANCEL IN MODULE OR NOT
                 if ([fileName length] != 0) {
                     [SpeechToTextModule deleteFile:fileName];
                     fileName = nil;
-                }
+                }*/
                 return;
             }
-
+            
+            if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
+                [delegate dismissSineWaveView:sineWave cancelled:recordCancelled];
+            
             if ([speechRecorder transcribe]) {
                 [self cleanUpProcessingThread];
                 processing = YES;
@@ -195,7 +187,7 @@
     
     [sineWave updateWaveDisplay];
     
-    if (detectedSpeech) {
+    if (detectedSpeech && [speechRecorder transcribe]) {
         if (meterStateDB.mAveragePower < kSilenceThresholdDB) {
             samplesBelowSilence++;
             if (samplesBelowSilence > kSilenceThresholdNumSamples)
@@ -240,18 +232,5 @@
     [delegate didReceiveVoiceResponse:jsonData];
 }
 
-#pragma Audio Player
-+ (BOOL)deleteFile: (NSString *) fName {
-    return [[NSFileManager defaultManager] removeItemAtURL:[SpeechToTextModule urlForFile:fName] error:nil];
-}
-+ (BOOL)audioFileExists: (NSString*) fName {
-    NSURL *urlRef = [SpeechToTextModule urlForFile:fName];
-    return [urlRef checkResourceIsReachableAndReturnError:nil];
-}
-+ (BOOL)renameFile: (NSString *) fName toNewFileName: (NSString *) newFileName {
-    NSURL *oldUrlRef = [SpeechToTextModule urlForFile:fName];
-    NSURL *newUrlRef = [SpeechToTextModule urlForFile:newFileName];
-    return [[NSFileManager defaultManager] moveItemAtURL:oldUrlRef toURL:newUrlRef error:nil];
 
-}
 @end

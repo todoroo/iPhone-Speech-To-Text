@@ -59,16 +59,10 @@
 - (id)initWithCustomDisplay:(NSString *)nibName;
 
 // Begins a voice recording
-- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFile: (NSString*) fileName;
+- (void)beginRecordingTranscribe: (BOOL) transcribe saveToFilePath: (NSURL*) fileName;
 
 // Stops a voice recording. The startProcessing parameter is intended for internal use,
 // so don't pass NO unless you really mean it.
 - (void)stopRecording:(BOOL)startProcessing;
-
-+ (NSURL *) urlForFile: (NSString *) fName;
-+ (BOOL)audioFileExists: (NSString*) filePath;
-+ (NSString *) fullFilePath: (NSString *) fName;
-+ (BOOL)deleteFile: (NSString *) fName;
-+ (BOOL)renameFile: (NSString *) fName toNewFileName: (NSString *) newFileName;
 
 @end

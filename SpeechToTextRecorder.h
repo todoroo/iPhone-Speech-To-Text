@@ -41,7 +41,9 @@ typedef struct AQRecorderState {
     bool                         transcribeAudio;
     
     // Recording
-    AudioFileID                  mAudioFile;
+    ExtAudioFileRef                  mAudioFile;
+    AudioStreamBasicDescription  recordDataFormat;                
+    SInt64                       recordCurrentPacket;  
     
     // Speex
     SpeexBits                    speex_bits; 
