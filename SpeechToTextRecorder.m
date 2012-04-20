@@ -10,6 +10,7 @@
 
 #import "SpeechToTextRecorder.h"
 #import "SineWaveViewController.h"
+//#import "CAStreamBasicDescription.h"
 
 #define FRAME_SIZE 110
 
@@ -40,17 +41,15 @@ static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBuffe
     buffList.mBuffers[0].mDataByteSize = inBuffer->mAudioDataByteSize;
     buffList.mBuffers[0].mNumberChannels = 1;
     UInt32 writeFrames = buffList.mBuffers[0].mDataByteSize / pAqData->recordDataFormat.mBytesPerFrame;
-
+    
     OSStatus result = ExtAudioFileWrite(pAqData->mAudioFile, writeFrames, &buffList);
     
-//    OSStatus result = AudioFileWritePackets (pAqData->mAudioFile, false, inBuffer->mAudioDataByteSize,
-//                                             inPacketDesc, pAqData->recordCurrentPacket, &recordNumPackets,
-//                                             inBuffer->mAudioData);
     if (result == 0) {
         NSLog(@"Success writing!!");
         pAqData->recordCurrentPacket += recordNumPackets;
     }
     XThrowIfError(result, @"Failed to write audio file packets");
+    NSLog(@"Result %d", result);
     
     
     // process speex
@@ -167,7 +166,7 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     speex_encoder_destroy(aqData.speex_enc_state);
     [aqData.encodedSpeexData release];
     AudioQueueDispose(aqData.mQueue, true);
-    AudioFileClose (aqData.mAudioFile); 
+    ExtAudioFileDispose (aqData.mAudioFile); 
     
     [super dealloc];
 }
@@ -179,14 +178,44 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
 - (void)reset {
     if (aqData.mQueue != NULL) {
         AudioQueueDispose(aqData.mQueue, true);
-        AudioFileClose (aqData.mAudioFile); 
+        ExtAudioFileDispose (aqData.mAudioFile); 
     }
     UInt32 enableLevelMetering = 1;
     AudioQueueNewInput(&(aqData.mDataFormat), HandleInputBuffer, &aqData, NULL, kCFRunLoopCommonModes, 0, &(aqData.mQueue));
     AudioQueueSetProperty(aqData.mQueue, kAudioQueueProperty_EnableLevelMetering, &enableLevelMetering, sizeof(UInt32));
     DeriveBufferSize(aqData.mQueue, &(aqData.mDataFormat), 0.5, &(aqData.bufferByteSize));
     
-//    XThrowIfError(ExtAudioFileSetProperty(aqData.mAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(AudioStreamBasicDescription), &(aqData.recordDataFormat)), "set ExtAudioFile client format");
+    
+    aqData.recordDataFormat.mSampleRate       = 16000.0;
+    aqData.recordDataFormat.mFormatID         = kAudioFormatMPEG4AAC; 
+    aqData.recordDataFormat.mChannelsPerFrame = 1;
+    
+    aqData.recordDataFormat.mBitsPerChannel   = 16;                    
+    aqData.recordDataFormat.mBytesPerPacket   =                        
+    aqData.recordDataFormat.mBytesPerFrame =
+    aqData.recordDataFormat.mChannelsPerFrame * sizeof (SInt16);
+    aqData.recordDataFormat.mFramesPerPacket  = 1;        
+    
+    AudioStreamBasicDescription captureFormat;
+    captureFormat.mSampleRate = 16000.0;
+//    captureFormat.SetAUCanonical(aqData.recordDataFormat.mChannelsPerFrame, true); // interleaved
+//    XThrowIfError(AudioQueueSetOfflineRenderFormat(aqData.mAudioFile], &captureFormat, acl), "set offline render format"); 
+    captureFormat.mFormatID = kAudioFormatLinearPCM;
+    captureFormat.mFormatID = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
+/*#if CA_PREFER_FIXED_POINT
+    captureFormat.mFormatFlags = kAudioFormatFlagsCanonical | (kAudioUnitSampleFractionBits << kLinearPCMFormatFlagsSampleFractionShift);
+#else
+    captureFormat.mFormatFlags = kAudioFormatFlagsCanonical;
+#endif*/
+    captureFormat.mChannelsPerFrame = aqData.recordDataFormat.mChannelsPerFrame;
+    captureFormat.mFramesPerPacket = 1;
+    captureFormat.mBitsPerChannel = 8 * sizeof(AudioUnitSampleType);
+    captureFormat.mBytesPerPacket = captureFormat.mBytesPerFrame = aqData.recordDataFormat.mChannelsPerFrame * sizeof(AudioUnitSampleType);
+
+    
+    
+    ExtAudioFileRef destinationFile = 0;
+    XThrowIfError(ExtAudioFileSetProperty(destinationFile, kExtAudioFileProperty_ClientDataFormat, sizeof(captureFormat), &captureFormat), "set ExtAudioFile client format");
 
     
     for (int i = 0; i < kNumberBuffers; i++) {
@@ -213,10 +242,8 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
             aqData.recordCurrentPacket = 0;
             aqData.mIsRunning = true;
             
-//            XThrowIfError(AudioFileCreateWithURL ((CFURLRef) fileURL, kAudioFileCAFType, &aqData.recordDataFormat, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
             XThrowIfError(ExtAudioFileCreateWithURL((CFURLRef) fileURL, kAudioFileCAFType, &aqData.recordDataFormat, NULL, kAudioFileFlags_EraseFile, &aqData.mAudioFile), @"Error creating audio file");
             
-            XThrowIfError(SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile), @"Error setting magic cookie"); 
             AudioQueueStart(aqData.mQueue, NULL);
         }
     }
@@ -240,14 +267,13 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
             
             AudioQueueStop(aqData.mQueue, true);
             aqData.mIsRunning = false;
-            XThrowIfError(SetMagicCookieForFile(aqData.mQueue, aqData.mAudioFile), @"Error setting magic cookie"); 
             /*for (int i = 0; i < kNumberBuffers; i++)
             {
                 AudioQueueFreeBuffer(aqData.mQueue, aqData.mBuffers[i]);
             }*/
             
             XThrowIfError(AudioQueueDispose(aqData.mQueue, true), @"Error disposing queue");
-            XThrowIfError(AudioFileClose (aqData.mAudioFile), @"Error file closing"); 
+            XThrowIfError(ExtAudioFileDispose (aqData.mAudioFile), @"Error file closing"); 
         }
     }
     
