@@ -60,7 +60,7 @@
 }
 
 - (void)reset {
-    [speechRecorder reset: fileName];
+    [speechRecorder reset: nil];
     [meterTimer invalidate];
     [meterTimer release];
     samplesBelowSilence = 0;

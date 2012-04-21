@@ -27,7 +27,7 @@
 
 #define XThrowIfError(error, operation)	\
 if (error) {							\
-NSLog(@"%@", operation);                \
+NSLog(@"%@, Error: %ld", operation, error);                \
 }
 
 typedef struct AQRecorderState {
@@ -41,7 +41,7 @@ typedef struct AQRecorderState {
     bool                         transcribeAudio;
     
     // Recording
-    ExtAudioFileRef                  mAudioFile;
+    ExtAudioFileRef              recordAudioFile;
     AudioStreamBasicDescription  recordDataFormat;                
     SInt64                       recordCurrentPacket;  
     
@@ -71,7 +71,7 @@ typedef struct AQRecorderState {
  interface). A nil argument will cause the module to display an alert view instead
  of the custom view controller. */
 - (void) stopRecording;
-- (void)reset: (NSURL*) fileURL;
+- (void)reset: (CFURLRef) fileURL;
 - (NSData *) encodedSpeexData;
 - (AudioQueueRef) mQueue;
 - (BOOL) transcribe;
