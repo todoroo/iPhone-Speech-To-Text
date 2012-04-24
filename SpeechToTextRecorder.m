@@ -32,16 +32,19 @@ static void HandleInputBuffer (void *aqData, AudioQueueRef inAQ, AudioQueueBuffe
     // handle recording
     
     AudioBufferList buffList;
+    buffList.mNumberBuffers = 1;
     buffList.mBuffers[0].mData = inBuffer->mAudioData;
     buffList.mBuffers[0].mDataByteSize = inBuffer->mAudioDataByteSize;
     buffList.mBuffers[0].mNumberChannels = pAqData->recordDataFormat.mChannelsPerFrame;
-    UInt32 writeFrames = inBuffer->mAudioDataByteSize / pAqData->recordDataFormat.mBytesPerFrame;
+    UInt32 writeFrames = inBuffer->mAudioDataByteSize / pAqData->mDataFormat.mBytesPerFrame;
     
     OSStatus result = ExtAudioFileWrite(pAqData->recordAudioFile, writeFrames, &buffList);
     
     if (result == 0) {
         NSLog(@"Success writing!!");
         pAqData->recordCurrentPacket += recordNumPackets;
+    } else {
+        NSLog(@"DataByteSize: %lu, NumChannels: %lu, WriteFrames: %lu", inBuffer->mAudioDataByteSize, pAqData->recordDataFormat.mChannelsPerFrame, writeFrames);
     }
     XThrowIfError(result, @"Failed to write audio file packets");
     NSLog(@"Result %ld", result);
@@ -120,21 +123,21 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
         
         
         //record
-        aqData.recordDataFormat.mSampleRate       = 48000;
+        aqData.recordDataFormat.mSampleRate       = 16000.0;
         aqData.recordDataFormat.mFormatID         = kAudioFormatMPEG4AAC; 
         aqData.recordDataFormat.mChannelsPerFrame = 1;
         
-        aqData.recordDataFormat.mBitsPerChannel   = 0;                    
-        aqData.recordDataFormat.mBytesPerPacket   = 0;                       
-        aqData.recordDataFormat.mBytesPerFrame =
-        aqData.recordDataFormat.mChannelsPerFrame * sizeof (SInt16);
-        aqData.recordDataFormat.mFramesPerPacket  = 1024;                     
-        aqData.recordDataFormat.mFormatFlags = 0;
-        aqData.recordDataFormat.mReserved = 0;
+//        aqData.recordDataFormat.mBitsPerChannel   = 16;                    
+//        aqData.recordDataFormat.mBytesPerPacket   =                        
+//        aqData.recordDataFormat.mBytesPerFrame =
+//        aqData.recordDataFormat.mChannelsPerFrame * sizeof (SInt16);
+//        aqData.recordDataFormat.mFramesPerPacket  = 1;                     
+//        aqData.recordDataFormat.mFormatFlags = 0;
+//        aqData.recordDataFormat.mReserved = 0;
         //        aqData.recordDataFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
         // use AudioFormat API to fill out the rest of the description
         UInt32 size = sizeof(aqData.recordDataFormat);
-        XThrowIfError(AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &aqData.recordDataFormat), @"couldn't create destination data format");
+        XThrowIfError(AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &(aqData.recordDataFormat)), @"couldn't create destination data format");
         
         
         
@@ -173,8 +176,8 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     XThrowIfError(AudioSessionInitialize(NULL, NULL, NULL, self), @"couldn't initialize audio session");
     
     // our default category -- we change this for conversion and playback appropriately
-    UInt32 audioCategory = kAudioSessionCategory_SoloAmbientSound;
-    XThrowIfError(AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(audioCategory), &audioCategory), @"couldn't set audio category");
+//    UInt32 audioCategory = kAudioSessionCategory_SoloAmbientSound;
+//    XThrowIfError(AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(audioCategory), &audioCategory), @"couldn't set audio category");
     
     // the session must be active for offline conversion including after an  an audio interruption
     XThrowIfError(AudioSessionSetActive(true), @"couldn't set audio session active\n");
@@ -205,26 +208,13 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     /*
      * Audio file stuff
      */
-    XThrowIfError(ExtAudioFileCreateWithURL(fileURL, kAudioFileM4AType, &aqData.mDataFormat, NULL, kAudioFileFlags_EraseFile, &aqData.recordAudioFile), @"Error creating audio file");
-    
-    
-    AudioStreamBasicDescription clientFormat;
-    // Create the canonical PCM client format.
-    memset(&clientFormat, 0, sizeof(clientFormat));
-    clientFormat.mSampleRate = aqData.mDataFormat.mSampleRate;
-    clientFormat.mFormatID = kAudioFormatLinearPCM;
-    clientFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked; //kAudioFormatFlagIsPacked | kAudioFormatFlagIsSignedInteger;
-    clientFormat.mChannelsPerFrame = aqData.mDataFormat.mChannelsPerFrame;
-    clientFormat.mBytesPerPacket   =                        
-    clientFormat.mBytesPerFrame =
-    clientFormat.mChannelsPerFrame * sizeof (SInt16);
-    clientFormat.mBitsPerChannel = 16;
-    clientFormat.mFramesPerPacket = 1;
+    XThrowIfError(ExtAudioFileCreateWithURL(fileURL, kAudioFileM4AType, &(aqData.recordDataFormat), NULL, kAudioFileFlags_EraseFile, &(aqData.recordAudioFile)), @"Error creating audio file");
     
     // Set the client format in source and destination file.
-    UInt32 size = sizeof( clientFormat );
+    UInt32 size = sizeof( aqData.mDataFormat );
 
-    XThrowIfError(ExtAudioFileSetProperty( aqData.recordAudioFile, kExtAudioFileProperty_ClientDataFormat, size, &clientFormat), @"Error while setting client format in destination file");
+    XThrowIfError(ExtAudioFileSetProperty( aqData.recordAudioFile, kExtAudioFileProperty_ClientDataFormat, size, &aqData.mDataFormat), @"Error while setting client format in destination file");
+    
     /*
      * End Audio file stuff
      */
@@ -252,8 +242,9 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     @synchronized(self) {
         if (!self.recording) {
             aqData.transcribeAudio = transcribe;	
+            [self setupRecording];
             
-            CFURLRef destination = [self setupRecording];
+            CFURLRef destination = fileURL;
             
             [self reset: destination];
             aqData.mCurrentPacket = 0;
