@@ -148,13 +148,12 @@
                     [SpeechToTextModule deleteFile:fileName];
                     fileName = nil;
                 }*/
-                return;
             }
             
             if ([delegate respondsToSelector:@selector(dismissSineWaveView:cancelled:)])
                 [delegate dismissSineWaveView:sineWave cancelled:recordCancelled];
             
-            if ([speechRecorder transcribe]) {
+            if ([speechRecorder transcribe] && !recordCancelled) {
                 [self cleanUpProcessingThread];
                 processing = YES;
                 processingThread = [[NSThread alloc] initWithTarget:self selector:@selector(postByteData:) object:speechRecorder.encodedSpeexData];

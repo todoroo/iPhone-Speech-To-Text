@@ -244,7 +244,7 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
             aqData.transcribeAudio = transcribe;	
             [self setupRecording];
             
-            CFURLRef destination = fileURL;
+            CFURLRef destination = (CFURLRef) fileURL;
             
             [self reset: destination];
             aqData.mCurrentPacket = 0;

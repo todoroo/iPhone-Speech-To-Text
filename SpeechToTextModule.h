@@ -18,9 +18,9 @@
 
 // Delegate will need to parse JSON and dismiss loading view if presented
 // returns true on success, false on failure
-- (BOOL)didReceiveVoiceResponse:(NSData *)data;
 
 @optional
+- (BOOL)didReceiveVoiceResponse:(NSData *)data;
 - (void)showSineWaveView:(SineWaveViewController *)view;
 - (void)dismissSineWaveView:(SineWaveViewController *)view cancelled:(BOOL)wasCancelled;
 - (void)showLoadingView;
