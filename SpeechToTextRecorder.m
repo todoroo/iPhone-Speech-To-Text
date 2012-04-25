@@ -172,27 +172,16 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
 - (BOOL)recording {
     return aqData.mIsRunning;
 }
--(CFURLRef) setupRecording {
+-(void) setupRecording {
     XThrowIfError(AudioSessionInitialize(NULL, NULL, NULL, self), @"couldn't initialize audio session");
     
     // our default category -- we change this for conversion and playback appropriately
-//    UInt32 audioCategory = kAudioSessionCategory_SoloAmbientSound;
-//    XThrowIfError(AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(audioCategory), &audioCategory), @"couldn't set audio category");
+    UInt32 audioCategory = kAudioSessionCategory_RecordAudio;
+    XThrowIfError(AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(audioCategory), &audioCategory), @"couldn't set audio category");
     
     // the session must be active for offline conversion including after an  an audio interruption
     XThrowIfError(AudioSessionSetActive(true), @"couldn't set audio session active\n");
     
-    // create the URLs we'll use for source and destination
-    //            NSString *source = [[NSBundle mainBundle] pathForResource:@"sourceA
-    
-    
-    NSArray  *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *destinationFilePath = [[NSString alloc] initWithFormat: @"%@/output.caf", documentsDirectory];
-    CFURLRef destinationURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, (CFStringRef)destinationFilePath, kCFURLPOSIXPathStyle, false);
-    
-    NSLog(@"Destination url: %@", [(NSURL*) destinationURL absoluteString]);
-    return destinationURL;
 }
 
 - (void)reset: (CFURLRef) fileURL {
@@ -281,6 +270,7 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
             
             XThrowIfError(AudioQueueDispose(aqData.mQueue, true), @"Error disposing queue");
             XThrowIfError(ExtAudioFileDispose (aqData.recordAudioFile), @"Error file closing"); 
+            AudioSessionSetActive(false);
         }
     }
     
