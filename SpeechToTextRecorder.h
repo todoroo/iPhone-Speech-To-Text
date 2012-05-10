@@ -42,8 +42,7 @@ typedef struct AQRecorderState {
     
     // Recording
     ExtAudioFileRef              recordAudioFile;
-    AudioStreamBasicDescription  recordDataFormat;                
-    SInt64                       recordCurrentPacket;  
+    AudioStreamBasicDescription  recordDataFormat;      
     
     // Speex
     SpeexBits                    speex_bits; 

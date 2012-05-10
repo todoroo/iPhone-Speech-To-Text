@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		222835F8143E9EBD000D6E05 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 222835F7143E9EBD000D6E05 /* Foundation.framework */; };
 		222836C1143E9F0B000D6E05 /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = 22283604143E9F0B000D6E05 /* config.h */; };
-		222836C3143E9F0B000D6E05 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 2228360A143E9F0B000D6E05 /* Makefile */; };
 		222836C4143E9F0B000D6E05 /* speex.h in Headers */ = {isa = PBXBuildFile; fileRef = 2228360D143E9F0B000D6E05 /* speex.h */; settings = {ATTRIBUTES = (); }; };
 		222836C5143E9F0B000D6E05 /* speex_bits.h in Headers */ = {isa = PBXBuildFile; fileRef = 2228360E143E9F0B000D6E05 /* speex_bits.h */; settings = {ATTRIBUTES = (); }; };
 		222836C6143E9F0B000D6E05 /* speex_buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2228360F143E9F0B000D6E05 /* speex_buffer.h */; settings = {ATTRIBUTES = (); }; };
@@ -117,7 +116,6 @@
 		2228372E143E9F0B000D6E05 /* getopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 222836B1143E9F0B000D6E05 /* getopt.c */; };
 		2228372F143E9F0B000D6E05 /* getopt1.c in Sources */ = {isa = PBXBuildFile; fileRef = 222836B2143E9F0B000D6E05 /* getopt1.c */; };
 		22283730143E9F0B000D6E05 /* getopt_win.h in Headers */ = {isa = PBXBuildFile; fileRef = 222836B3143E9F0B000D6E05 /* getopt_win.h */; };
-		22283731143E9F0B000D6E05 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 222836B4143E9F0B000D6E05 /* Makefile */; };
 		22283732143E9F0B000D6E05 /* skeleton.c in Sources */ = {isa = PBXBuildFile; fileRef = 222836B7143E9F0B000D6E05 /* skeleton.c */; };
 		22283733143E9F0B000D6E05 /* skeleton.h in Headers */ = {isa = PBXBuildFile; fileRef = 222836B8143E9F0B000D6E05 /* skeleton.h */; };
 		22283734143E9F0B000D6E05 /* speexdec.c in Sources */ = {isa = PBXBuildFile; fileRef = 222836BA143E9F0B000D6E05 /* speexdec.c */; };
@@ -147,7 +145,6 @@
 		222835F7143E9EBD000D6E05 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		222835FB143E9EBE000D6E05 /* SpeechToText-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SpeechToText-Prefix.pch"; sourceTree = "<group>"; };
 		22283604143E9F0B000D6E05 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
-		2228360A143E9F0B000D6E05 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		2228360B143E9F0B000D6E05 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		2228360C143E9F0B000D6E05 /* Makefile.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.in; sourceTree = "<group>"; };
 		2228360D143E9F0B000D6E05 /* speex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = speex.h; sourceTree = "<group>"; };
@@ -309,7 +306,6 @@
 		222836B1143E9F0B000D6E05 /* getopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = getopt.c; sourceTree = "<group>"; };
 		222836B2143E9F0B000D6E05 /* getopt1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = getopt1.c; sourceTree = "<group>"; };
 		222836B3143E9F0B000D6E05 /* getopt_win.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = getopt_win.h; sourceTree = "<group>"; };
-		222836B4143E9F0B000D6E05 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		222836B5143E9F0B000D6E05 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
 		222836B6143E9F0B000D6E05 /* Makefile.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.in; sourceTree = "<group>"; };
 		222836B7143E9F0B000D6E05 /* skeleton.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = skeleton.c; sourceTree = "<group>"; };
@@ -431,7 +427,6 @@
 				22283617143E9F0B000D6E05 /* speex_resampler.h */,
 				22283618143E9F0B000D6E05 /* speex_stereo.h */,
 				22283619143E9F0B000D6E05 /* speex_types.h */,
-				2228360A143E9F0B000D6E05 /* Makefile */,
 				2228360B143E9F0B000D6E05 /* Makefile.am */,
 				2228360C143E9F0B000D6E05 /* Makefile.in */,
 				22283612143E9F0B000D6E05 /* speex_config_types.h.in */,
@@ -600,7 +595,6 @@
 				222836B1143E9F0B000D6E05 /* getopt.c */,
 				222836B2143E9F0B000D6E05 /* getopt1.c */,
 				222836B3143E9F0B000D6E05 /* getopt_win.h */,
-				222836B4143E9F0B000D6E05 /* Makefile */,
 				222836B5143E9F0B000D6E05 /* Makefile.am */,
 				222836B6143E9F0B000D6E05 /* Makefile.in */,
 				222836B7143E9F0B000D6E05 /* skeleton.c */,
@@ -768,7 +762,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				222836C3143E9F0B000D6E05 /* Makefile in Sources */,
 				222836D2143E9F0B000D6E05 /* bits.c in Sources */,
 				222836D3143E9F0B000D6E05 /* buffer.c in Sources */,
 				222836D4143E9F0B000D6E05 /* cb_search.c in Sources */,
@@ -818,7 +811,6 @@
 				2228372D143E9F0B000D6E05 /* window.c in Sources */,
 				2228372E143E9F0B000D6E05 /* getopt.c in Sources */,
 				2228372F143E9F0B000D6E05 /* getopt1.c in Sources */,
-				22283731143E9F0B000D6E05 /* Makefile in Sources */,
 				22283732143E9F0B000D6E05 /* skeleton.c in Sources */,
 				22283734143E9F0B000D6E05 /* speexdec.c in Sources */,
 				22283735143E9F0B000D6E05 /* speexenc.c in Sources */,
