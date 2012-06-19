@@ -155,7 +155,7 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     speex_encoder_destroy(aqData.speex_enc_state);
     [aqData.encodedSpeexData release];
     AudioQueueDispose(aqData.mQueue, true);
-//    ExtAudioFileDispose (aqData.mAudioFile); 
+    ExtAudioFileDispose (aqData.recordAudioFile); 
     
     [super dealloc];
 }
@@ -175,7 +175,7 @@ static OSStatus SetMagicCookieForFile (AudioQueueRef inQueue, AudioFileID inFile
     
 }
 
-- (void)reset: (CFURLRef) fileURL {
+- (void)reset:(CFURLRef)fileURL {
     if (aqData.mQueue != NULL) {
         AudioQueueDispose(aqData.mQueue, true);
         ExtAudioFileDispose (aqData.recordAudioFile); 

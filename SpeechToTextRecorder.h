@@ -25,8 +25,10 @@
 #define kMinVolumeSampleValue 0.01
 #define kMaxVolumeSampleValue 1.0
 
+#define DEBUG_SPEECH NO
+
 #define XThrowIfError(error, operation)	\
-if (error) {							\
+if (error && DEBUG_SPEECH) {							\
 NSLog(@"%@, Error: %ld", operation, error);                \
 }
 
