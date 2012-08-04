@@ -198,7 +198,12 @@
 
 - (void)postByteData:(NSData *)byteData {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSURL *url = [NSURL URLWithString:@"https://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=en-US"];
+    
+    NSString *language = [[NSLocale preferredLanguages] objectAtIndex:0];
+        NSString *urlString = [NSString stringWithFormat:@"%@%@",
+                           @"https://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=",
+                           language];
+    NSURL *url = [NSURL URLWithString:urlString];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
     [request setHTTPMethod:@"POST"];
     [request setHTTPBody:byteData];
