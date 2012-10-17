@@ -72,7 +72,9 @@ static const spx_word16_t balance_bounds[31] = {18, 23, 30, 38, 49, 63,  81, 104
 #define COMPATIBILITY_HACK(s) 
 #endif
 
-EXPORT SpeexStereoState *speex_stereo_state_init()
+SpeexStereoState *speex_stereo_state_init(void);
+
+EXPORT SpeexStereoState *speex_stereo_state_init(void)
 {
    SpeexStereoState *stereo = speex_alloc(sizeof(SpeexStereoState));
    speex_stereo_state_reset(stereo);

@@ -66,6 +66,12 @@
 void comment_init(char **comments, int* length, char *vendor_string);
 void comment_add(char **comments, int* length, char *tag, char *val);
 
+int oe_write_page(ogg_page *page, FILE *fp);
+void add_fishead_packet (ogg_stream_state *os);
+void add_fisbone_packet (ogg_stream_state *os, spx_int32_t serialno, SpeexHeader *header);
+void version(void);
+void version_short(void);void usage(void);
+
 
 /*Write an Ogg page to a file pointer*/
 int oe_write_page(ogg_page *page, FILE *fp)
@@ -181,7 +187,7 @@ void add_fisbone_packet (ogg_stream_state *os, spx_int32_t serialno, SpeexHeader
    add_fisbone_to_stream(os, &fp);
 }
 
-void version()
+void version(void)
 {
    const char* speex_version;
    speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING, (void*)&speex_version);
@@ -189,7 +195,7 @@ void version()
    printf ("Copyright (C) 2002-2006 Jean-Marc Valin\n");
 }
 
-void version_short()
+void version_short(void)
 {
    const char* speex_version;
    speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING, (void*)&speex_version);
@@ -197,7 +203,7 @@ void version_short()
    printf ("Copyright (C) 2002-2006 Jean-Marc Valin\n");
 }
 
-void usage()
+void usage(void)
 {
    printf ("Usage: speexenc [options] input_file output_file\n");
    printf ("\n");

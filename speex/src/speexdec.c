@@ -92,6 +92,11 @@
                            ((buf[base+1]<<8)&0xff00)| \
   	           	    (buf[base]&0xff))
 
+FILE *out_file_open(char *outFile, int rate, int *channels);
+void usage(void);
+void version(void);
+void version_short(void);
+
 static void print_comments(char *comments, int length)
 {
    char *c=comments;
@@ -251,7 +256,7 @@ FILE *out_file_open(char *outFile, int rate, int *channels)
    return fout;
 }
 
-void usage()
+void usage(void)
 {
    printf ("Usage: speexdec [options] input_file.spx [output_file]\n");
    printf ("\n");
@@ -288,7 +293,7 @@ void usage()
    printf ("Please report bugs to the mailing list `speex-dev@xiph.org'.\n");
 }
 
-void version()
+void version(void)
 {
    const char* speex_version;
    speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING, (void*)&speex_version);
@@ -296,7 +301,7 @@ void version()
    printf ("Copyright (C) 2002-2006 Jean-Marc Valin\n");
 }
 
-void version_short()
+void version_short(void)
 {
    const char* speex_version;
    speex_lib_ctl(SPEEX_LIB_GET_VERSION_STRING, (void*)&speex_version);

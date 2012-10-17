@@ -10,11 +10,14 @@ union jbpdata {
   unsigned char data[4];
 };
 
+void synthIn(JitterBufferPacket *in, int idx, int span);
+void jitterFill(JitterBuffer *jb);
+
 void synthIn(JitterBufferPacket *in, int idx, int span) {
   union jbpdata d;
   d.idx = idx;
   
-  in->data = d.data;
+  in->data = (char *)d.data;
   in->len = sizeof(d);
   in->timestamp = idx * 10;
   in->span = span * 10;
